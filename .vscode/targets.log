@@ -1,0 +1,298 @@
+make all --print-data-base --no-builtin-variables --no-builtin-rules --question
+# GNU Make 4.2.1
+# Built for x86_64-pc-linux-gnu
+# Copyright (C) 1988-2016 Free Software Foundation, Inc.
+# License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+# This is free software: you are free to change and redistribute it.
+# There is NO WARRANTY, to the extent permitted by law.
+
+# Make data base, printed on Sat Aug  7 06:24:00 2021
+
+# Variables
+
+# automatic
+<D = $(patsubst %/,%,$(dir $<))
+# automatic
+?F = $(notdir $?)
+# environment
+WSLENV = VSCODE_WSL_EXT_LOCATION/up
+# default
+.SHELLFLAGS := -c
+# environment
+VSCODE_AGENT_FOLDER = /home/orious/.vscode-server
+# environment
+VSCODE_LOG_NATIVE = false
+# automatic
+?D = $(patsubst %/,%,$(dir $?))
+# automatic
+@D = $(patsubst %/,%,$(dir $@))
+# automatic
+@F = $(notdir $@)
+# makefile
+CURDIR := /mnt/s/CourseC++/VITE/backend
+# makefile
+SHELL = /bin/sh
+# environment
+VSCODE_NLS_CONFIG = {"locale":"en","availableLanguages":{}}
+# environment
+_ = /home/orious/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/node
+# makefile (from 'Makefile', line 1)
+MAKEFILE_LIST :=  Makefile
+# 'override' directive
+GNUMAKEFLAGS := 
+# environment
+XDG_DATA_DIRS = /usr/local/share:/usr/share:/var/lib/snapd/desktop
+# environment
+VSCODE_VERBOSE_LOGGING = true
+# environment
+VSCODE_CWD = /mnt/d/Program Files/Microsoft VS Code
+# default
+MAKE_HOST := x86_64-pc-linux-gnu
+# environment
+PATH = /home/orious/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/mnt/c/Program Files/Common Files/Oracle/Java/javapath:/mnt/c/Windows/system32:/mnt/c/Windows:/mnt/c/Windows/System32/Wbem:/mnt/c/Windows/System32/WindowsPowerShell/v1.0/:/mnt/c/Windows/System32/OpenSSH/:/mnt/c/Program Files (x86)/NVIDIA Corporation/PhysX/Common:/mnt/c/Program Files/NVIDIA Corporation/NVIDIA NvDLISR:/mnt/c/WINDOWS/system32:/mnt/c/WINDOWS:/mnt/c/WINDOWS/System32/Wbem:/mnt/c/WINDOWS/System32/WindowsPowerShell/v1.0/:/mnt/c/WINDOWS/System32/OpenSSH/:/mnt/d/Program Files/Microsoft VS Code/bin:/mnt/d/Program Files/Android/Android Studio/jre/bin:/mnt/c/ProgramData/chocolatey/bin:/mnt/c/Program Files/dotnet/:/mnt/c/Program Files/Git/cmd:/mnt/d/Program Files/NodeJS/:/mnt/c/tools/php80:/mnt/c/MinGW/bin:/mnt/c/Program Files (x86)/dotnet/:/mnt/d/Program Files/Android/Sdk/platform-tools/:/mnt/c/Program Files/Amazon/AWSCLIV2/:/mnt/c/Program Files/Docker/Docker/resources/bin:/mnt/c/ProgramData/DockerDesktop/version-bin:/mnt/c/Program Files/Amazon/AWSSAMCLI/bin/:/mnt/d/Program Files/Python39/Scripts/:/mnt/d/Program Files/Python39/:/mnt/d/Users/Orious/anaconda3:/mnt/d/Users/Orious/anaconda3/Library/mingw-w64/bin:/mnt/d/Users/Orious/anaconda3/Library/usr/bin:/mnt/d/Users/Orious/anaconda3/Library/bin:/mnt/d/Users/Orious/anaconda3/Scripts:/mnt/c/Users/magid/AppData/Local/Microsoft/WindowsApps:/mnt/c/Users/magid/.dotnet/tools:/mnt/c/MinGW/CMake/bin:/mnt/c/Users/magid/AppData/Roaming/npm:/mnt/c/MinGW/bin:/mnt/d/Program Files/Microsoft VS Code/bin:/snap/bin
+# environment
+DOCKER_IMAGE = prediction-engine:latest
+# environment
+VSCODE_LOG_STACK = false
+# environment
+VSCODE_IPC_HOOK_CLI = /tmp/vscode-ipc-fb4dd63d-6fcc-49e6-a698-a9fb380d585b.sock
+# default
+.FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell archives jobserver output-sync check-symlink load
+# automatic
+%F = $(notdir $%)
+# environment
+VSCODE_PIPE_LOGGING = true
+# environment
+PWD = /mnt/s/CourseC++/VITE/backend
+# environment
+DOCKER_PASSWD = cara+olho
+# default
+.LOADED := 
+# environment
+WSL_INTEROP = /run/WSL/31450_interop
+# environment
+VSCODE_AMD_ENTRYPOINT = vs/server/remoteExtensionHostProcess
+# environment
+HOME = /home/orious
+# environment
+LOGNAME = orious
+# environment
+APPLICATION_INSIGHTS_NO_DIAGNOSTIC_CHANNEL = true
+# environment
+VSCODE_HANDLES_UNCAUGHT_ERRORS = true
+# automatic
+^D = $(patsubst %/,%,$(dir $^))
+# environment
+MAKELEVEL := 0
+# default
+MAKE = $(MAKE_COMMAND)
+# default
+MAKECMDGOALS := all
+# environment
+SHLVL = 0
+# default
+MAKE_VERSION := 4.2.1
+# environment
+USER = orious
+# makefile
+.DEFAULT_GOAL := setup
+# environment
+NAME = andromeda
+# automatic
+%D = $(patsubst %/,%,$(dir $%))
+# environment
+VSCODE_WSL_EXT_LOCATION = /mnt/c/Users/magid/.vscode/extensions/ms-vscode-remote.remote-wsl-0.58.2
+# default
+MAKE_COMMAND := make
+# default
+.VARIABLES := 
+# automatic
+*F = $(notdir $*)
+# makefile
+MAKEFLAGS = pqrR
+# environment
+MFLAGS = -pqrR
+# automatic
+*D = $(patsubst %/,%,$(dir $*))
+# automatic
++D = $(patsubst %/,%,$(dir $+))
+# automatic
++F = $(notdir $+)
+# default
+MAKEFILES := 
+# automatic
+<F = $(notdir $<)
+# environment
+LC_ALL = C
+# environment
+HOSTTYPE = x86_64
+# automatic
+^F = $(notdir $^)
+# default
+SUFFIXES := 
+# default
+.INCLUDE_DIRS = /usr/include /usr/local/include /usr/include
+# environment
+VSCODE_INJECT_NODE_MODULE_LOOKUP_PATH = /home/orious/.vscode-server/bin/c3f126316369cd610563c75b1b1725e0679adfb3/remote/node_modules
+# environment
+DOCKER_ID = devopsxpro
+# default
+.RECIPEPREFIX := 
+# environment
+CIRCLE_API_TOKEN = 56ea01dff1d27a031b27ec287f7e69f62d5aa75b
+# environment
+LANG = C
+# environment
+TERM = xterm-256color
+# environment
+VSCODE_EXTHOST_WILL_SEND_SOCKET = true
+# environment
+WSL_DISTRO_NAME = Ubuntu-20.04
+# environment
+MOTD_SHOWN = update-motd
+# variable set hash-table stats:
+# Load=70/1024=7%, Rehash=0, Collisions=4/98=4%
+
+# Pattern-specific Variable Values
+
+# No pattern-specific variable values.
+
+# Directories
+
+# . (device 144, inode 2251799814107314): 41 files, no impossibilities.
+
+# 41 files, no impossibilities in 1 directories.
+
+# Implicit Rules
+
+# No implicit rules.
+
+# Files
+
+setup:
+#  Implicit rule search has not been done.
+#  Implicit/static pattern stem: ''
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# automatic
+# @ := setup
+# automatic
+# % := 
+# automatic
+# * := 
+# automatic
+# + := 
+# automatic
+# | := 
+# automatic
+# < := 
+# automatic
+# ^ := 
+# automatic
+# ? := 
+# variable set hash-table stats:
+# Load=8/32=25%, Rehash=0, Collisions=1/11=9%
+#  recipe to execute (from 'Makefile', line 2):
+	# Preparing virtual environment to installing core dependencies
+	python -m venv .venvx
+
+all: install lint test
+#  Command line target.
+#  Implicit rule search has been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
+
+# Not a target:
+.SUFFIXES:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+# Not a target:
+Makefile:
+#  Implicit rule search has been done.
+#  Last modified 2021-08-05 10:08:11.7085005
+#  File has been updated.
+#  Successfully updated.
+
+test:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 33):
+	# Running test with converage
+	coverage run -m py.test -vv &&\
+    coverage report -m --fail-under=70 &&\
+	rm -f ./hadolint
+
+# Not a target:
+.DEFAULT:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+
+migrations:
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 27):
+	flask db init --multidb
+	flask db stamp head
+	flask db migrate
+	flask db upgrade
+
+lint: install
+#  Implicit rule search has not been done.
+#  Modification time never checked.
+#  File has not been updated.
+#  recipe to execute (from 'Makefile', line 20):
+	# Scanning dockerfile
+	sudo ./hadolint --ignore DL3003 ./Dockerfile
+	# Scanning source code
+	black ./
+	pylint --ignore=migrations,settings.py,manage.py -d W ./*.py
+
+install: setup
+#  Implicit rule search has not been done.
+#  File does not exist.
+#  File has been updated.
+#  Needs to be updated (-q is set).
+# variable set hash-table stats:
+# Load=0/32=0%, Rehash=0, Collisions=0/3=0%
+#  recipe to execute (from 'Makefile', line 6):
+	# Updating package installer
+	# Installing dependecies
+	. .venvx/bin/activate
+	python -m pip install --upgrade pip &&\
+	pip install -r test-requirements.txt
+	# install hadolint in not exists
+	if [ -e "./hadolint" ]; then \
+		echo "Found hadolint in this directory." ; \
+	else \
+		sudo wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
+		sudo chmod +x hadolint; \
+	fi 
+	
+
+# files hash-table stats:
+# Load=9/1024=1%, Rehash=0, Collisions=0/26=0%
+# VPATH Search Paths
+
+# No 'vpath' search paths.
+ 
+
+# No general ('VPATH' variable) search path.
+
+# strcache buffers: 1 (0) / strings = 50 / storage = 484 B / avg = 9 B
+# current buf: size = 8162 B / used = 484 B / count = 50 / avg = 9 B
+
+# strcache performance: lookups = 68 / hit rate = 26%
+# hash-table stats:
+# Load=50/8192=1%, Rehash=0, Collisions=1/68=1%
+# Finished Make data base on Sat Aug  7 06:24:00 2021
+
+ 

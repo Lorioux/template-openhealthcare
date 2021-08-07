@@ -1,0 +1,97 @@
+version: 2.0
+
+commands:
+  destroy_environ:
+    description: destroy deployment ennvironment
+    parameters:
+      awsConfigStatus:
+        type: enum
+        default: "configured"
+        enum: ["configured", "notconfigured"]
+    steps:
+      - run:
+          name: destroy deployment environment
+          when: on_fail
+          command: |
+            awsStatus=<parameters.awsConfigStatus>
+            if [ $awsStatus == "notconfigured"]
+              then
+                # TODO: install awscli
+                # TODO: configure awscli profile
+
+            # TODO: destoy the environment starting from S3 resources  emptying
+            # aws s3 rm s3://<backed_name>/resouce_name --recursive --force
+            # TODO: destroy deployment stacks based on worflow ID
+            # aws cloudformation destroy ----?
+
+  make_migrations:
+    description: make database migrations
+    parameters:
+      versionChanged:
+        type: bool
+        default: yes
+    steps:
+      - restore_cache:
+          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock" }}
+
+      - run:
+          name: install dependencies
+          command: |
+            make install -r test-requirements.txt
+      - run:
+          name: migrate databases
+          command: |
+            make migrations
+
+jobs:
+  build:
+    description: Analyze backend source code
+    docker:
+      - image: circleci/python:3.8.4
+    # working_directory: ./
+    steps:
+      - checkout
+      - run:
+          name: create environment to run code analyze
+          command: |
+            # require virtural environ 
+            python -m venv .venv 
+            . .venv/bin/activate
+      - run:
+          name: install dependencies
+          command: |
+            ls
+            make install 
+      - run:
+          name: run code lints
+          command: 
+            # format the source code 
+            make lint
+      - save_cache:
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
+          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
+  
+  # analyze:
+  #   description: Analyze backend source code
+  #   docker:
+  #     - image: circleci/python:3.8.4
+  #   # working_directory: ./ 
+  #   steps:
+  #     - checkout
+  #     - run: echo "Complete"
+
+
+workflows:
+  version: 2
+  build_workflow:
+    jobs:
+      - build
+      # - build:
+      #     requires:
+      #     - analyze
+      
+      
+        

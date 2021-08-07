@@ -1,0 +1,13 @@
+.env
+*.db
+
+.pytest_cache
+
+.venv
+.venvx
+
+.logs
+__pycache__/**
+hadolint
+migrations
+htmlcov
