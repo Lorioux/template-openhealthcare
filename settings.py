@@ -12,16 +12,16 @@ class VARIABLES(object):
     def __init__(self) -> None:
         super().__init__()
 
-        self.PSQL_CONNECT_TO = os.environ.get("PSQL_CONNECT_TOUT", 10)
-        self.PSQL_SERVER_PO = os.environ.get("POSL_SERVER_PORT", 5432)
+        self.PSQL_CONNECT_TIMEOUT = os.environ.get("PSQL_CONNECT_TIMEOUT", 10)
+        self.PSQL_SERVER_PORT = os.environ.get("POSL_SERVER_PORT", 5432)
 
         self.BOOKING = {
             "PSQL_USERNAME": os.environ.get("PSQL_USERNAME", "postgres"),
             "PSQL_PASSWORD": os.environ.get("PSQL_PASSWORD", "password"),
-            "PSQL_SVR_PORT": self.PSQL_SERVER_PO,
+            "PSQL_SERVER_PORT": self.PSQL_SERVER_PORT,
             "PSQL_HOSTNAME": os.environ.get("PSQL_HOSTNAME", "localhost"),
             "PSQL_DATABASE": os.environ.get("PSQL_DB_BOOKING", "donatecare"),
-            "PSQL_CON_TOUT": self.PSQL_CONNECT_TO,
+            "PSQL_CONNECT_TIMEOUT": self.PSQL_CONNECT_TIMEOUT,
         }
 
         self.PROFILES = self.BOOKING.copy()
@@ -98,7 +98,7 @@ class Config:
     SUBSCRIBERS = VARIABLES.SUBSCRIBERS
     # SUBSCRIBERS['PSQL_DATABASE'] = os.environ.get('PSQL_DB_SUBSCRIBERS', 'donatecare')
 
-    PSQL_CONNECT_URL = "postgresql://%(PSQL_USERNAME)s:%(PSQL_PASSWORD)s@%(PSQL_HOSTNAME)s:%(PSQL_SVR_PORT)s/%(PSQL_DATABASE)s?connect_timeout=%(PSQL_CON_TOUT)s&application_name=DONATECARE"
+    PSQL_CONNECT_URL = "postgresql://%(PSQL_USERNAME)s:%(PSQL_PASSWORD)s@%(PSQL_HOSTNAME)s:%(PSQL_SERVER_PORT)s/%(PSQL_DATABASE)s?connect_timeout=%(PSQL_CONNECT_TIMEOUT)s&application_name=OHCS"
 
     SQLALCHEMY_BINDS = {
         "booking": f"{PSQL_CONNECT_URL}" % BOOKING,

@@ -9,9 +9,11 @@ from logging.handlers import RotatingFileHandler
 from waitress import serve
 from flask import request
 
-# sys.path.append("..")
-from app import make_app
+sys.path.append("..")
+
 from backend.settings import ProductionConfig
+from app import make_app
+
 
 
 log = logging.getLogger("werkzeug")

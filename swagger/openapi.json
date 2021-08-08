@@ -17,50 +17,6 @@
     {"jwt_auth": []},
     {"open_key":[]}
   ],
-  "servers": [
-    {
-      "url": "http://{server_name}:{port}/{basePath}/",
-      "description": "Development server",
-      "variables": {
-        "server_name" : {
-          "default": "localhost"
-        },
-        "port": {
-          "default": "5000",
-          "enum": [
-            "80",
-            "432",
-            "5000",
-            "8080"
-          ]
-        },
-        "basePath": {
-          "default": "v1"
-        }
-      }
-    },
-    {
-      "url": "https://{server_name}:{port}/{basePath}/",
-      "description": "Production secure server",
-      "variables": {
-        "server_name" : {
-          "default": "localhost"
-        },
-        "port": {
-          "default": "5000",
-          "enum": [
-            "8432",
-            "432",
-            "5000"
-          ]
-        },
-        "basePath": {
-          "default": "v1"
-        }
-
-      }
-    }
-  ],
   "tags": [
     {
       "name": "members",

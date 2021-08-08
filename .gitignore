@@ -7,7 +7,9 @@
 .venvx
 
 .logs
-__pycache__/**
 hadolint
 migrations
+htmlcov
+__pycache__
+.coverage
 htmlcov

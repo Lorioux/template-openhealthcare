@@ -51,12 +51,16 @@ jobs:
     # working_directory: ./
     steps:
       - checkout
+      - restore_cache:
+          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
       - run:
           name: create environment to run code analyze
           command: |
+            
             # require virtural environ 
             python -m venv .venv 
             . .venv/bin/activate
+            cp -rf ./ ./backend
       - run:
           name: install dependencies
           command: |

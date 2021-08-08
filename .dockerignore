@@ -11,3 +11,16 @@ __pycache__
 test-requirements.txt
 *.db
 tests
+Dockerfile
+*.drawio
+htmlcov
+setup.cfg    
+tmp
+prometheus
+attatchments
+Makefile
+.coverage 
+README.md
+README.rst
+migrations
+.git

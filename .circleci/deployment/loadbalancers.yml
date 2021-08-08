@@ -1,0 +1,62 @@
+
+
+Resources:
+  LBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties: 
+      IpAddressType: dualstack
+      Name: LOADBALANCER_1
+      Scheme: iternet-facing
+      SecurityGroups: 
+        - ""
+      SubnetMappings: 
+        - SubnetMapping
+      Subnets: 
+        - String
+      Tags: 
+        - Tag
+      Type: String
+
+  LBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Depends-on: [ LBTGroup, LBalancer]
+    Properties: 
+      AlpnPolicy: 
+        - String
+      Certificates: 
+        - Certificate
+      DefaultActions: 
+        - Action:
+            Type: forward
+            TargetGroupArn: !Ref LBTGroup
+      LoadBalancerArn: String
+      Port: Integer
+      Protocol: String
+      SslPolicy: String 
+
+  LBTGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      HealthCheckEnabled: Boolean
+      HealthCheckIntervalSeconds: Integer
+      HealthCheckPath: String
+      HealthCheckPort: String
+      HealthCheckProtocol: String
+      HealthCheckTimeoutSeconds: Integer
+      HealthyThresholdCount: Integer
+      Matcher: 
+        Matcher
+      Name: String
+      Port: Integer
+      Protocol: String
+      ProtocolVersion: String
+      Tags: 
+        - Tag
+      TargetGroupAttributes: 
+        - TargetGroupAttribute
+      Targets: 
+        - TargetDescription
+      TargetType: String
+      UnhealthyThresholdCount: Integer
+      VpcId: String
+
