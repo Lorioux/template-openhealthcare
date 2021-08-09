@@ -1,14 +1,9 @@
 #!/bin/env python
 from __future__ import absolute_import
-
-
 import os
-import sys
 import logging
 from flasgger import Swagger
 from flask import Flask, jsonify, json
-
-sys.path.append("..")
 from backend import initialize_dbase, dbase, settings
 from backend.registration.microservice import profiles
 from backend.booking.microservice import bookings
@@ -22,35 +17,20 @@ def configure_swagger(app: Flask, template):
             "url": "{protocol}://{hostname}:{port}/{basePath}/",
             "description": "Production secure server",
             "variables": {
-                "protocol": {
-                    "default": "https",
-                    "enum": [
-                        "https",
-                        "http"
-                    ]
-                },
-                "hostname" : {
-                    "default": "localhost"
-                },
-                "port": {
-                    "default": "80",
-                    "enum": [
-                        "8080",
-                        "443",
-                        "80"
-                    ]
-                },
-                "basePath": {
-                    "default": "v1"
-                }
-            }
+                "protocol": {"default": "https", "enum": ["https", "http"]},
+                "hostname": {"default": "localhost"},
+                "port": {"default": "80", "enum": ["8080", "443", "80"]},
+                "basePath": {"default": "v1"},
+            },
         }
     ]
     servers[0]["variables"]["port"]["default"] = os.getenv("FLASK_RUN_PORT", 80)
-    servers[0]["variables"]["hostname"]["default"] = os.environ.get("FLASK_RUN_HOST", "127.0.0.1")
-    
+    servers[0]["variables"]["hostname"]["default"] = os.environ.get(
+        "FLASK_RUN_HOST", "127.0.0.1"
+    )
+
     if not app.debug:
-        servers[0]["variables"]["protocol"]="https"
+        servers[0]["variables"]["protocol"] = "https"
 
     app.config["SWAGGER"] = {
         "title": "OHCS API",
@@ -58,12 +38,12 @@ def configure_swagger(app: Flask, template):
         "openapi": "3.0.1",
         "basePath": "/v1",
     }
-    template["servers"] = servers
+    # template["servers"] = servers
     Swagger(app, template=template)
     pass
 
 
-def make_app(environment=None, log_handler=None):
+def make_app(environment=None):
     app = Flask(__name__, instance_relative_config=True)
 
     if environment:

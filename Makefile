@@ -20,7 +20,7 @@ install: setup
 	
 lint: install
 	# Scanning dockerfile
-	sudo ./hadolint --ignore DL3003 ./Dockerfile
+	sudo ./hadolint --ignore DL3003 --ignore DL3018 ./Dockerfile
 	# Scanning source code
 	black ./
 	pylint --ignore=migrations,settings.py,manage.py -d W ./*.py

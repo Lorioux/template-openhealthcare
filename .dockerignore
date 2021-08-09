@@ -1,6 +1,6 @@
 .gitignore
 .venv
-.venx
+.venvx
 hadolint
 .github
 .circleci
@@ -24,3 +24,5 @@ README.md
 README.rst
 migrations
 .git
+databases
+manage.py

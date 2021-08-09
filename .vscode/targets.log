@@ -6,10 +6,12 @@ make.exe all --print-data-base --no-builtin-variables --no-builtin-rules --quest
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun Aug 08 12:34:56 2021
+# Make data base, printed on Mon Aug 09 15:05:44 2021
 
 # Variables
 
+# environment
+FPS_BROWSER_APP_PROFILE_STRING = Internet Explorer
 # environment
 SYSTEMDRIVE = C:
 # environment
@@ -23,7 +25,7 @@ USERPROFILE = C:\Users\magid
 # environment
 LOCALAPPDATA = C:\Users\magid\AppData\Local
 # environment
-VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-30263980-888b-450b-b539-181f03c2d890-sock
+VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-8b22085d-1474-45d8-a980-0398ba57ef9e-sock
 # environment
 VSCODE_CWD = D:\Program Files\Microsoft VS Code
 # environment
@@ -39,11 +41,13 @@ MAKE_COMMAND := C:/ProgramData/chocolatey/lib/make/tools/install/bin/make.exe
 # automatic
 @D = $(patsubst %/,%,$(patsubst %\,%,$(dir $@)))
 # environment
-CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_25404_CKXIBBCJAODXSSUJ
+CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_9832_KCNKKWFZACHHJRHT
 # environment
 ONEDRIVECOMMERCIAL = C:\Users\magid\OneDrive - UAb
 # environment
 VSCODE_BROWSER_CODE_LOADING = bypassHeatCheck
+# environment
+FPS_BROWSER_USER_PROFILE_STRING = Default
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # default
@@ -101,7 +105,7 @@ MAKEFILE_LIST := Makefile
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 25404
+VSCODE_PID = 9832
 # automatic
 ?D = $(patsubst %/,%,$(patsubst %\,%,$(dir $?)))
 # automatic
@@ -109,7 +113,7 @@ VSCODE_PID = 25404
 # automatic
 <D = $(patsubst %/,%,$(patsubst %\,%,$(dir $<)))
 # environment
-VSCODE_NLS_CONFIG = {"locale":"en-gb","availableLanguages":{},"_languagePackSupport":true}
+VSCODE_NLS_CONFIG = {"locale":"en-us","availableLanguages":{},"_languagePackSupport":true}
 # default
 MAKE_HOST := Windows32
 # environment
@@ -133,7 +137,7 @@ MAKELEVEL := 0
 # default
 MAKE = $(MAKE_COMMAND)
 # environment
-PATH = C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\Program Files\Microsoft VS Code\bin;D:\Program Files\Android\Android Studio\jre\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\dotnet\;C:\Program Files\Git\cmd;D:\Program Files\NodeJS\;C:\tools\php80;C:\MinGW\bin;C:\Program Files (x86)\dotnet\;D:\Program Files\Android\Sdk\platform-tools\;%ANDROID_SDK_HOME%\;%ANDROID_AVD_HOME%\;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Docker\Docker\resources\bin;C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Amazon\AWSSAMCLI\bin\;D:\Program Files\Python39\Scripts\;D:\Program Files\Python39\;D:\Users\Orious\anaconda3;D:\Users\Orious\anaconda3\Library\mingw-w64\bin;D:\Users\Orious\anaconda3\Library\usr\bin;D:\Users\Orious\anaconda3\Library\bin;D:\Users\Orious\anaconda3\Scripts;C:\Users\magid\AppData\Local\Microsoft\WindowsApps;%PyCharm%;C:\Users\magid\.dotnet\tools;C:\MinGW\CMake\bin;C:\Users\magid\AppData\Roaming\npm;C:\MinGW\bin;;D:\Program Files\Microsoft VS Code\bin
+PATH = C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\Program Files\Microsoft VS Code\bin;D:\Program Files\Android\Android Studio\jre\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\dotnet\;C:\Program Files\Git\cmd;D:\Program Files\NodeJS\;C:\tools\php80;C:\MinGW\bin;C:\Program Files (x86)\dotnet\;D:\Program Files\Android\Sdk\platform-tools\;%ANDROID_SDK_HOME%\;%ANDROID_AVD_HOME%\;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Docker\Docker\resources\bin;C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Amazon\AWSSAMCLI\bin\;D:\Program Files\Python39\Scripts\;D:\Program Files\Python39\;D:\Users\Orious\anaconda3;D:\Users\Orious\anaconda3\Library\mingw-w64\bin;D:\Users\Orious\anaconda3\Library\usr\bin;D:\Users\Orious\anaconda3\Library\bin;D:\Users\Orious\anaconda3\Scripts;C:\Users\magid\AppData\Local\Microsoft\WindowsApps;%PyCharm%;C:\Users\magid\.dotnet\tools;C:\MinGW\CMake\bin;C:\Users\magid\AppData\Roaming\npm;C:\MinGW\bin;;D:\Program Files\Microsoft VS Code\bin;C:\Program Files (x86)\GitHub CLI\
 # environment
 ZES_ENABLE_SYSMAN = 1
 # environment
@@ -172,14 +176,13 @@ AWS_ACCESS_KEY_ID = AKIAYKW3E3SM6PKFEAM6
 ORIGINAL_XDG_CURRENT_DESKTOP = undefined
 # environment
 USERDOMAIN = ANDROMEDA
-# 'override' directive
+#  
+'override' directive
 GNUMAKEFLAGS := 
 # environment
 VS140COMNTOOLS = C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
 # environment
 OS = Windows_NT
-# environment
-__COMPAT_LAYER = DetectorsAppHealth
 # makefile
 .DEFAULT_GOAL := setup
 # default
@@ -239,7 +242,7 @@ CHOCOLATEYTOOLSLOCATION = C:\ProgramData\chocolatey
 # environment
 PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 140 Stepping 1, GenuineIntel
 # variable set hash-table stats:
-# Load=114/1024=11%, Rehash=0, Collisions=9/144=6%
+# Load=115/1024=11%, Rehash=0, Collisions=10/145=7%
 
 # Pattern-specific Variable Values
 
@@ -247,9 +250,9 @@ PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 140 Stepping 1, GenuineIntel
 
 # Directories
 
-# . (key s:/CourseC++/VITE/backend, mtime 1628408363): 42 files, no impossibilities.
+# . (key s:/CourseC++/VITE/backend, mtime 1628517025): 43 files, no impossibilities.
 
-# 42 files, no impossibilities in 1 directories.
+# 43 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -301,7 +304,7 @@ lint: install
 #  File has not been updated.
 #  recipe to execute (from 'Makefile', line 22):
 	# Scanning dockerfile
-	sudo ./hadolint --ignore DL3003 ./Dockerfile
+	sudo ./hadolint --ignore DL3003 --ignore DL3018 ./Dockerfile
 	# Scanning source code
 	black ./
 	pylint --ignore=migrations,settings.py,manage.py -d W ./*.py
@@ -309,7 +312,7 @@ lint: install
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2021-08-08 07:55:53
+#  Last modified 2021-08-09 14:55:30
 #  File has been updated.
 #  Successfully updated.
 
@@ -376,12 +379,12 @@ install: setup
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 49 / storage = 457 B / avg = 9 B
-# current buf: size = 8174 B / used = 457 B / count = 49 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 50 / storage = 467 B / avg = 9 B
+# current buf: size = 8174 B / used = 467 B / count = 50 / avg = 9 B
 
-# strcache performance: lookups = 67 / hit rate = 26%
+# strcache performance: lookups = 68 / hit rate = 26%
 # hash-table stats:
-# Load=49/8192=1%, Rehash=0, Collisions=0/67=0%
-# Finished Make data base on Sun Aug 08 12:34:56 2021
+# Load=50/8192=1%, Rehash=0, Collisions=0/68=0%
+# Finished Make data base on Mon Aug 09 15:05:44 2021
 
  

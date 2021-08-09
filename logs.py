@@ -1,7 +1,9 @@
 import logging
 from logging.handlers import SMTPHandler
 from logging.config import dictConfig
+from logging.handlers import RotatingFileHandler
 from flask.logging import default_handler
+
 
 dictConfig(
     {
@@ -34,6 +36,8 @@ mail_handler.setFormatter(
     logging.Formatter("[%(asctime)s] %(levelname)s in %(module)s: %(message)s")
 )
 
+filehandler = RotatingFileHandler("./.logs/app.log", maxBytes=10000000, backupCount=1)
+
 
 def set_logger_handlers(app):
     for logger in (
@@ -41,5 +45,10 @@ def set_logger_handlers(app):
         logging.getLogger("werkzeug"),
         logging.getLogger("sqlalchemy"),
     ):
-        logger.addHandler(default_handler)
-        logger.addHandler(mail_handler)
+        if not app.debug:
+
+            logger.addHandler(filehandler)
+            logger.addHandler(mail_handler)
+        else:
+            logger.addHandler(default_handler)
+            logger.addHandler(mail_handler)
