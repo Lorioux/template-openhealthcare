@@ -24,38 +24,29 @@ commands:
             # TODO: destroy deployment stacks based on worflow ID
             # aws cloudformation destroy ----?
 
-  make_migrations:
+  migrate:
     description: make database migrations
     parameters:
       versionChanged:
         type: bool
         default: yes
     steps:
-      - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
-
+      # - restore_cache:
+      #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: install dependencies
           command: |
-            make install -r test-requirements.txt
+            make install
       - run:
           name: migrate databases
           command: |
             make migrations
 
-  run_tests:
-    description: >-
-      Command to run database migrations and code tests
-    steps:
-      -  
-
-
 jobs:
-  tests:
+  build:
     description: Analyze backend source code
     docker:
       - image: circleci/python:3.8.4
-    # working_directory: ./
     steps:
       - checkout
       - run:
@@ -78,8 +69,8 @@ jobs:
       #       - "/usr/local/bin"
       #       - "/usr/local/lib/python3.6/site-packages"
       #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock"}}
-  
-  build:
+    
+  tests:
     docker:
       - image: circleci/python:3.8.4
       - image: circleci/postgres:9.6.16-alpine
@@ -87,6 +78,7 @@ jobs:
           POSTGRES_USERNAME: postgres
           POSRGRES_PASSWORD: password
           POSTGRES_PORT: 5432
+    # working_directory: ./
     environment:
       POSTGRES_USERNAME: postgres
       POSTGRES_PASSWORD: password
@@ -94,41 +86,45 @@ jobs:
       FLASK_APP: "openhcs/app.py"
     steps:
       - checkout
-      # - restore_cache:
-      #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      # # - restore_cache:
+      # #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: Install dependencies
           command: |
             sudo apt update 
-            make install
+            sudo apt-get install -y postgresql-client --fix-missing
+            make install    
       - run:
-          name: run database migrartions tests
+          name: run local database migrartions tests
           command: |
-            sudo apt-get install -y postgresql-client
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            make migrations
+            # make migrations
       - run:
           name: run code tests 
           command: |
-           make tests 
 
-  # analyze:
-  #   description: Analyze backend source code
-  #   docker:
-  #     - image: circleci/python:3.8.4
-  #   # working_directory: ./ 
-  #   steps:
-  #     - checkout
-  #     - restore_cache:
-  #         key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
-  #     - run:
-  #         name: check dependecies for security vulnarability
-  #         command: |
-  #           pipenv shell
-  #           pipenv check 
+           make test
+
+  make_migrations:
+    docker:
+      - image: circleci/python:3.8.4
+    environment:
+      POSTGRES_USERNAME: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_HOSTNAME: localhost
+      FLASK_APP: "openhcs/app.py"
+    working_directory: ~/
+    steps:
+      - checkout
+      - migrate:
+          versionChanged: 'yes'
+      # - run:
+      #     name: migrate databases 
+      #     command: | 
+            
 
 
 workflows:
@@ -136,7 +132,13 @@ workflows:
   build_workflow:
     jobs:
       - build
-      # - tests
-      
-      
+      - tests:
+          requires:
+            - "build"
+      - make_migrations:
+          requires:
+            - "tests"
+  # testing:
+  #   jobs:
+  #     - coverage  
         

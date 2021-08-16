@@ -1,13 +1,14 @@
 setup: 
 	# Preparing virtual environment to installing core dependencies
-	python -m pip install --upgrade pip  &&\
+	# python -m pip install --upgrade pip  &&\
 	pip install pipenv &&\
-	if [ -e "./.venv" ]; then echo "Exist .venv"; else mkdir .venv; pipenv --python 3.8; fi; 
-	. .venv/bin/activate
+	if [ -e "./.venv" ]; then echo "Found .venv"; else mkdir .venv; pipenv --python 3.8; fi; 
+	
 install: setup
 	# Updating package installer
-	# Installing dependecies
-	pipenv install --dev --skip-lock
+	# Installing dependecies 
+	if [ -e "./.venv" ]; then pipenv install --dev --skip-lock; fi;
+	
 	# install hadolint in not exists
 	if [ -e "./hadolint" ]; then \
 		echo "Found hadolint in this directory." ; \
@@ -33,7 +34,7 @@ migrations:
 
 test: 
 	# Running test with converage
-	pipenv run coverage run -m py.test -vv &&\
+	pipenv run coverage run --source=openhcs --branch -m py.test -vv &&\
     pipenv run coverage report -m --fail-under=70 &&\
 	rm -f ./hadolint
 

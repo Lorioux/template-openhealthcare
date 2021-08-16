@@ -37,15 +37,11 @@ jobs:
       # Runs dependencies installion instruction on makefile 
       - name: Install dependencies
         run: |
-          . .venv/bin/activate
-          cd backend
           make install
       
       # Scan code 
       - name: Perform lint operation on source code and dockerfile
         run: |
-          . .venv/bin/activate
-          cd backend
           make lint
       
       # Runs database migrations based on migrations version differences
@@ -56,16 +52,13 @@ jobs:
           # currentVersion= cat allambic_ini | grep "version_pattern"
           # if [ $lastVersion != currentVerion ]
           # then
-          # 
-          . .venv/bin/activate
-          cd backend
+          sudo apt update 
+          sudo apt-get install -y postgresql-client --fix-missing
           make migrations
       
       # Runs unit tests on code 
       - name: Test build code
         run: |
-          . .venv/bin/activate
-          cd backend
           make test
           
           
