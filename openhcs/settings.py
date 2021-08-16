@@ -1,6 +1,8 @@
 import os
 import sys
 
+from dotenv.main import load_dotenv
+
 sys.path.append("..")
 
 from dotenv import get_key, set_key
@@ -40,15 +42,16 @@ class VARIABLES(object):
         self.set_secret()
 
     def set_secret(self):
-        environ = get_key("./.env", "FLASK_ENV").__eq__("production")
-        secret = get_key("./.env", "SECRET_KEY").__eq__("")
+        if load_dotenv("./.env"):
+            environ = os.getenv("FLASK_ENV").__eq__("production")
+            secret = os.getenv("SECRET_KEY").__eq__("")
         if secret:
             SECRET_KEY = os.urandom(64).hex("-")
             os.environ["SECRET_KEY"] = SECRET_KEY
 
             if environ:
                 # if environ is in production
-                set_key("./.env", "SECRET_KEY", SECRET_KEY)
+                set_key(f"{__here__}.env", "SECRET_KEY", SECRET_KEY)
 
         # print(os.environ.get('FLASK_PORT'))
         pass

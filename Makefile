@@ -15,10 +15,8 @@ install: setup
 		sudo wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
 		sudo chmod +x hadolint; \
 	fi
-	# lock dependecies packages
-	pipenv lock
 	# install postgres dependency
-	sudo apt install python3-psycopg2
+	sudo apt install -y python3-psycopg2 
 	
 lint: 
 	# Scanning dockerfile
