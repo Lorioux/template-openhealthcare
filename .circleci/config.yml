@@ -67,7 +67,6 @@ jobs:
           paths:
             - ".venv"
             - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
           key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock"}}
     
   tests:
@@ -115,13 +114,11 @@ jobs:
     working_directory: ~/
     steps:
       - checkout
-      - migrate:
-          versionChanged: 'yes'
-      # - run:
-      #     name: migrate databases 
-      #     command: | 
-            
-  
+      - run:
+          name: migrate databases 
+          command: | 
+            echo ${PSQL_HOSTNAME}
+
 
 workflows:
   version: 2
@@ -131,9 +128,9 @@ workflows:
       - tests:
           requires:
             - "build"
-      # - make_migrations:
-      #     requires:
-      #       - "tests"
+      - make_migrations:
+          requires:
+            - "tests"
   # testing:
   #   jobs:
   #     - coverage  

@@ -1,6 +1,0 @@
-make.exe --dry-run --always-make --keep-going --print-directory
-make: Entering directory 's:/CourseC++/VITE/backend'
-# Preparing virtual environment to installing core dependencies
-python -m venv .venv
-make: Leaving directory 's:/CourseC++/VITE/backend'
- 
