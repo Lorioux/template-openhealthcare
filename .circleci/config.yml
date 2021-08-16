@@ -63,12 +63,12 @@ jobs:
           command: |
             # format the source code 
             make lint
-      # - save_cache:
-      #     paths:
-      #       - ".venv"
-      #       - "/usr/local/bin"
-      #       - "/usr/local/lib/python3.6/site-packages"
-      #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock"}}
+      - save_cache:
+          paths:
+            - ".venv"
+            - "/usr/local/bin"
+            - "/usr/local/lib/python3.6/site-packages"
+          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock"}}
     
   tests:
     docker:
@@ -86,35 +86,31 @@ jobs:
       FLASK_APP: "openhcs/app.py"
     steps:
       - checkout
-      # # - restore_cache:
-      # #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      - restore_cache:
+          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: Install dependencies
           command: |
             sudo apt update 
             sudo apt-get install -y postgresql-client --fix-missing
-            make install    
+            # make install    
       - run:
           name: run local database migrartions tests
           command: |
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # make migrations
+            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            make migrations
       - run:
           name: run code tests 
           command: |
-
            make test
 
   make_migrations:
     docker:
       - image: circleci/python:3.8.4
     environment:
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_HOSTNAME: localhost
       FLASK_APP: "openhcs/app.py"
     working_directory: ~/
     steps:
@@ -125,7 +121,7 @@ jobs:
       #     name: migrate databases 
       #     command: | 
             
-
+  
 
 workflows:
   version: 2
@@ -135,9 +131,9 @@ workflows:
       - tests:
           requires:
             - "build"
-      - make_migrations:
-          requires:
-            - "tests"
+      # - make_migrations:
+      #     requires:
+      #       - "tests"
   # testing:
   #   jobs:
   #     - coverage  

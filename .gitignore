@@ -2,12 +2,13 @@
 
 .pytest_cache
 
-# .venv
+.venv
 .venvx
 
 .logs
 hadolint
-# migrations
+migrations
 htmlcov
 __pycache__
 .coverage
+.vscode
