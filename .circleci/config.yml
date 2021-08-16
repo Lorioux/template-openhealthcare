@@ -31,8 +31,6 @@ commands:
         type: bool
         default: yes
     steps:
-      # - restore_cache:
-      #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: install dependencies
           command: |
@@ -67,7 +65,7 @@ jobs:
           paths:
             - ".venv"
             - "/usr/local/bin"
-          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock"}}
+          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
     
   tests:
     docker:
