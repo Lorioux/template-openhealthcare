@@ -1,0 +1,13 @@
+---
+- name: Create custer 
+  become: true
+  vars:
+  - AWS: "{{ lookup('env', 'AWS_ACCESS_KEY_ID' )}}"
+  shell: | 
+    aws eks create-cluster --name test --fargate --region "{{ lookup('env', 'AWS_DEFAULT_REGION')}}"
+  register: logs 
+
+
+- name: Print logs
+  debug:
+    msg: "{{ logs.stderr_lines }}"

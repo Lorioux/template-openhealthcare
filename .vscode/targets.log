@@ -6,12 +6,10 @@ make.exe all --print-data-base --no-builtin-variables --no-builtin-rules --quest
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Mon Aug 09 15:05:44 2021
+# Make data base, printed on Mon Aug 16 07:28:58 2021
 
 # Variables
 
-# environment
-FPS_BROWSER_APP_PROFILE_STRING = Internet Explorer
 # environment
 SYSTEMDRIVE = C:
 # environment
@@ -25,7 +23,7 @@ USERPROFILE = C:\Users\magid
 # environment
 LOCALAPPDATA = C:\Users\magid\AppData\Local
 # environment
-VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-8b22085d-1474-45d8-a980-0398ba57ef9e-sock
+VSCODE_IPC_HOOK_EXTHOST = \\.\pipe\vscode-ipc-05287c1b-6b38-4cf6-b2fd-281d2a975097-sock
 # environment
 VSCODE_CWD = D:\Program Files\Microsoft VS Code
 # environment
@@ -41,13 +39,11 @@ MAKE_COMMAND := C:/ProgramData/chocolatey/lib/make/tools/install/bin/make.exe
 # automatic
 @D = $(patsubst %/,%,$(patsubst %\,%,$(dir $@)))
 # environment
-CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_9832_KCNKKWFZACHHJRHT
+CHROME_CRASHPAD_PIPE_NAME = \\.\pipe\crashpad_14508_TEVDGRAQKGECTJTT
 # environment
 ONEDRIVECOMMERCIAL = C:\Users\magid\OneDrive - UAb
 # environment
 VSCODE_BROWSER_CODE_LOADING = bypassHeatCheck
-# environment
-FPS_BROWSER_USER_PROFILE_STRING = Default
 # environment
 VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # default
@@ -58,6 +54,8 @@ TWILIO_AUTH_TOKEN = bad009eb4fd5fdfaf16eb531b7e54ccf
 %D = $(patsubst %/,%,$(patsubst %\,%,$(dir $%)))
 # automatic
 ^D = $(patsubst %/,%,$(patsubst %\,%,$(dir $^)))
+# environment
+AWS_DEFAULT_REGION = us-east-1
 # environment
 VSCODE_LOG_STACK = false
 # automatic
@@ -105,9 +103,11 @@ MAKEFILE_LIST := Makefile
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-VSCODE_PID = 9832
+VSCODE_PID = 14508
 # automatic
 ?D = $(patsubst %/,%,$(patsubst %\,%,$(dir $?)))
+# environment
+POSTGRES_USERNAME = postgres
 # automatic
 *F = $(notdir $*)
 # automatic
@@ -137,7 +137,7 @@ MAKELEVEL := 0
 # default
 MAKE = $(MAKE_COMMAND)
 # environment
-PATH = C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\Program Files\Microsoft VS Code\bin;D:\Program Files\Android\Android Studio\jre\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\dotnet\;C:\Program Files\Git\cmd;D:\Program Files\NodeJS\;C:\tools\php80;C:\MinGW\bin;C:\Program Files (x86)\dotnet\;D:\Program Files\Android\Sdk\platform-tools\;%ANDROID_SDK_HOME%\;%ANDROID_AVD_HOME%\;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Docker\Docker\resources\bin;C:\ProgramData\DockerDesktop\version-bin;C:\Program Files\Amazon\AWSSAMCLI\bin\;D:\Program Files\Python39\Scripts\;D:\Program Files\Python39\;D:\Users\Orious\anaconda3;D:\Users\Orious\anaconda3\Library\mingw-w64\bin;D:\Users\Orious\anaconda3\Library\usr\bin;D:\Users\Orious\anaconda3\Library\bin;D:\Users\Orious\anaconda3\Scripts;C:\Users\magid\AppData\Local\Microsoft\WindowsApps;%PyCharm%;C:\Users\magid\.dotnet\tools;C:\MinGW\CMake\bin;C:\Users\magid\AppData\Roaming\npm;C:\MinGW\bin;;D:\Program Files\Microsoft VS Code\bin;C:\Program Files (x86)\GitHub CLI\
+PATH = C:\Program Files\Common Files\Oracle\Java\javapath;C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\;C:\Windows\System32\OpenSSH\;C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common;C:\Program Files\NVIDIA Corporation\NVIDIA NvDLISR;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;D:\Program Files\Microsoft VS Code\bin;D:\Program Files\Android\Android Studio\jre\bin;C:\ProgramData\chocolatey\bin;C:\Program Files\dotnet\;C:\Program Files\Git\cmd;D:\Program Files\NodeJS\;C:\tools\php80;C:\MinGW\bin;C:\Program Files (x86)\dotnet\;D:\Program Files\Android\Sdk\platform-tools\;D:\Program Files\Android\Sdk\;D:\Program Files\Android\Sdk\emulator\;C:\Program Files\Amazon\AWSCLIV2\;C:\Program Files\Amazon\AWSSAMCLI\bin\;C:\Program Files\OpenSSH-Win64;;C:\Program Files\Docker\Docker\resources\bin;C:\ProgramData\DockerDesktop\version-bin;D:\Program Files\Python39\Scripts\;D:\Program Files\Python39\;D:\Users\Orious\anaconda3;D:\Users\Orious\anaconda3\Library\mingw-w64\bin;D:\Users\Orious\anaconda3\Library\usr\bin;D:\Users\Orious\anaconda3\Library\bin;D:\Users\Orious\anaconda3\Scripts;C:\Users\magid\AppData\Local\Microsoft\WindowsApps;%PyCharm%;C:\Users\magid\.dotnet\tools;C:\MinGW\CMake\bin;C:\Users\magid\AppData\Roaming\npm;C:\Program Files (x86)\GitHub CLI\
 # environment
 ZES_ENABLE_SYSMAN = 1
 # environment
@@ -145,13 +145,13 @@ COMPUTERNAME = ANDROMEDA
 # default
 MAKEFILES := 
 # environment
-AWS_SECRET_ACCESS_KEY = 4qYAO3hbqr3gGONjzBmkwH5CCqDoPvdJT19C0VOY
+AWS_SECRET_ACCESS_KEY = 3K5NUqxeTbeX9R0UpLFwAW3BLlgbHjvI6OALyxrg
 # automatic
 ^F = $(notdir $^)
 # environment
 PROMPT = $P$G
 # environment
-CHOCOLATEYLASTPATHUPDATE = 132630466059591393
+CHOCOLATEYLASTPATHUPDATE = 132729926299408991
 # environment
 LOGONSERVER = \\ANDROMEDA
 # environment
@@ -169,15 +169,14 @@ PROGRAMW6432 = C:\Program Files
 # environment
 PATHEXT = .COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC
 # environment
-AWS_ACCESS_KEY_ID = AKIAYKW3E3SM6PKFEAM6
+AWS_ACCESS_KEY_ID = AKIA5BQIWFU5TZRPZ57G
 # automatic
 +F = $(notdir $+)
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = undefined
 # environment
 USERDOMAIN = ANDROMEDA
-#  
-'override' directive
+# 'override' directive
 GNUMAKEFLAGS := 
 # environment
 VS140COMNTOOLS = C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Tools\
@@ -195,8 +194,6 @@ USERDOMAIN_ROAMINGPROFILE = ANDROMEDA
 NUMBER_OF_PROCESSORS = 8
 # environment
 PUBLIC = C:\Users\Public
-# environment
-POSTGRES_USER = postgres
 # environment
 APPDATA = C:\Users\magid\AppData\Roaming
 # environment
@@ -230,8 +227,6 @@ SUFFIXES :=
 # environment
 ALLUSERSPROFILE = C:\ProgramData
 # environment
-SESSIONNAME = Console
-# environment
 ANDROID_EMULATOR = D:\Program Files\Android\Sdk\emulator
 # default
 .FEATURES := target-specific order-only second-expansion else-if shortest-stem undefine oneshell nocomment grouped-target extra-prereqs archives jobserver output-sync load
@@ -242,7 +237,7 @@ CHOCOLATEYTOOLSLOCATION = C:\ProgramData\chocolatey
 # environment
 PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 140 Stepping 1, GenuineIntel
 # variable set hash-table stats:
-# Load=115/1024=11%, Rehash=0, Collisions=10/145=7%
+# Load=113/1024=11%, Rehash=0, Collisions=9/143=6%
 
 # Pattern-specific Variable Values
 
@@ -250,9 +245,9 @@ PROCESSOR_IDENTIFIER = Intel64 Family 6 Model 140 Stepping 1, GenuineIntel
 
 # Directories
 
-# . (key s:/CourseC++/VITE/backend, mtime 1628517025): 43 files, no impossibilities.
+# . (key s:/CourseC++/VITE/backend, mtime 1629059932): 44 files, no impossibilities.
 
-# 43 files, no impossibilities in 1 directories.
+# 44 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -312,7 +307,7 @@ lint: install
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2021-08-09 14:55:30
+#  Last modified 2021-08-10 14:41:10
 #  File has been updated.
 #  Successfully updated.
 
@@ -362,7 +357,7 @@ install: setup
 	else \
 		sudo wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
 		sudo chmod +x hadolint; \
-	fi 
+	fi
 	
 
 # Not a target:
@@ -379,12 +374,12 @@ install: setup
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 50 / storage = 467 B / avg = 9 B
-# current buf: size = 8174 B / used = 467 B / count = 50 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 51 / storage = 473 B / avg = 9 B
+# current buf: size = 8174 B / used = 473 B / count = 51 / avg = 9 B
 
-# strcache performance: lookups = 68 / hit rate = 26%
+# strcache performance: lookups = 69 / hit rate = 26%
 # hash-table stats:
-# Load=50/8192=1%, Rehash=0, Collisions=0/68=0%
-# Finished Make data base on Mon Aug 09 15:05:44 2021
+# Load=51/8192=1%, Rehash=0, Collisions=0/69=0%
+# Finished Make data base on Mon Aug 16 07:28:58 2021
 
  

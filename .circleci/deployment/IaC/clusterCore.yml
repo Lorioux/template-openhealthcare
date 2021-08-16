@@ -1,0 +1,196 @@
+---
+AWSTemplateFormatVersion: "2010-09-09"
+Description: 'EKS Managed Nodes (SSH access: false) created by Cloudformation'
+
+Mappings:
+  ServicePrincipalPartitionMap:
+    aws:
+      EC2: ec2.amazonaws.com
+      EKS: eks.amazonaws.com
+
+Parameters:
+  ClusterIaCStackName:
+    Description: Cluster communication network stack name
+    Type: String
+
+Resources:
+
+  ServiceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - !FindInMap 
+                  - ServicePrincipalPartitionMap
+                  - !Ref 'AWS::Partition'
+                  - EKS
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKSClusterPolicy'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKSVPCResourceController'
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/ServiceRole'
+
+  PolicyELBPermissions:
+    Type: 'AWS::IAM::Policy'
+    DependsOn: [ServiceRole]
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'ec2:DescribeAccountAttributes'
+              - 'ec2:DescribeAddresses'
+              - 'ec2:DescribeInternetGateways'
+            Effect: Allow
+            Resource: '*'
+        Version: 2012-10-17
+      PolicyName: !Sub '${AWS::StackName}-PolicyELBPermissions'
+      Roles:
+        - !Ref ServiceRole
+
+  PolicyCloudWatchMetrics:
+    Type: 'AWS::IAM::Policy'
+    DependsOn: [ServiceRole]
+    Properties:
+      PolicyDocument:
+        Statement:
+          - Action:
+              - 'cloudwatch:PutMetricData'
+            Effect: Allow
+            Resource: '*'
+        Version: 2012-10-17
+      PolicyName: !Sub '${AWS::StackName}-PolicyCloudWatchMetrics'
+      Roles:
+        - !Ref ServiceRole
+
+  ControlPlane:
+    Type: 'AWS::EKS::Cluster'
+    DependsOn: ServiceRole
+    Properties:
+      Name: openhcs
+      ResourcesVpcConfig:
+        SecurityGroupIds:
+          - !Ref '${ClusterIaCStackName}::ControlPlaneSecurityGroup'
+        SubnetIds:
+          - !Ref '${ClusterIaCStackName}::SubnetPublicUSEAST1C'
+          - !Ref '${ClusterIaCStackName}::SubnetPublicUSEAST1F'
+          - !Ref '${ClusterIaCStackName}::SubnetPrivateUSEAST1C'
+          - !Ref '${ClusterIaCStackName}::SubnetPrivateUSEAST1F'
+      RoleArn: !GetAtt ServiceRole.Arn
+      Version: '1.21'
+
+  LaunchTemplate:
+    Type: 'AWS::EC2::LaunchTemplate'
+    Properties:
+      LaunchTemplateData:
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              Iops: 3000
+              Throughput: 125
+              VolumeSize: 80
+              VolumeType: gp3
+        MetadataOptions:
+          HttpPutResponseHopLimit: 2
+          HttpTokens: optional
+        SecurityGroupIds:
+          - Fn::ImportValue:
+              !Sub '${ClusterIaCStackName}::ClusterSecurityGroupId'
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: openhcs-ng-be0cb1fb-Node
+              - Key: alpha.eksctl.io/nodegroup-name
+                Value: ng-be0cb1fb
+              - Key: alpha.eksctl.io/nodegroup-type
+                Value: managed
+          - ResourceType: volume
+            Tags:
+              - Key: Name
+                Value: openhcs-ng-be0cb1fb-Node
+              - Key: alpha.eksctl.io/nodegroup-name
+                Value: ng-be0cb1fb
+              - Key: alpha.eksctl.io/nodegroup-type
+                Value: managed
+          - ResourceType: network-interface
+            Tags:
+              - Key: Name
+                Value: openhcs-ng-be0cb1fb-Node
+              - Key: alpha.eksctl.io/nodegroup-name
+                Value: ng-be0cb1fb
+              - Key: alpha.eksctl.io/nodegroup-type
+                Value: managed
+      LaunchTemplateName: !Sub '${AWS::StackName}-Template'
+  
+  ManagedNodeGroup:
+    Type: 'AWS::EKS::Nodegroup'
+    Properties:
+      AmiType: AL2_x86_64
+      ClusterName: openhcs
+      InstanceTypes:
+        - t3.medium
+      Labels:
+        alpha.eksctl.io/cluster-name: openhcs
+        alpha.eksctl.io/nodegroup-name: openhcs-ng
+      LaunchTemplate:
+        Id: !Ref LaunchTemplate
+      NodeRole: !GetAtt NodeInstanceRole.Arn
+      NodegroupName: "openhcs-ng"
+      ScalingConfig:
+        DesiredSize: 2
+        MaxSize: 2
+        MinSize: 2
+      Subnets: !Split 
+        - ','
+        - Fn::ImportValue:
+            !Sub '${ClusterIaCStackName}::SubnetsPublic'
+      Tags:
+        alpha.eksctl.io/nodegroup-name: openhcs-ng
+        alpha.eksctl.io/nodegroup-type: managed
+  
+  NodeInstanceRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - 'sts:AssumeRole'
+            Effect: Allow
+            Principal:
+              Service:
+                - !FindInMap 
+                  - ServicePrincipalPartitionMap
+                  - !Ref 'AWS::Partition'
+                  - EC2
+        Version: "2012-10-17"
+      ManagedPolicyArns:
+        - !Sub >-
+          arn:${AWS::Partition}:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKSWorkerNodePolicy'
+        - !Sub 'arn:${AWS::Partition}:iam::aws:policy/AmazonEKS_CNI_Policy'
+      Path: /
+      Tags:
+        - Key: Name
+          Value: !Sub '${AWS::StackName}/NodeInstanceRole'
+
+Outputs:
+  ServiceRoleARN:
+    Value: !GetAtt ServiceRole.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}::ServiceRoleARN'
+  ARN:
+    Value: !GetAtt ControlPlane.Arn
+    Export:
+      Name: !Sub '${AWS::StackName}::ARN'
+  CertificateAuthorityData:
+    Value: !GetAtt ControlPlane.CertificateAuthorityData
+  NodeInstanceRole:
+    Description: Cluster Nodes instance role 
+    Value: !GetAtt  NodeInstanceRole.Arn

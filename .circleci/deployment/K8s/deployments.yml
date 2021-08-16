@@ -1,0 +1,110 @@
+# https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  "${DEPLOYMENT_NAME}"
+  namespace: default
+  labels:
+    app:  openhcs
+    environ: "${ENVIRONMENT}"   # staggging or production
+    tier: backend
+    context: "${CONTEXT}"       # blue or green
+    version: "${VERSION}"
+spec:
+  selector:
+    matchLabels:
+      app: openhcs
+  replicas: 2
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app:  openhcs
+        environ: "${ENVIRONMENT}"
+        tier: backend
+        context: "${CONTEXT}"
+    spec:
+      containers:
+      - name:  openhcs
+        image: "${OPENHCS_IMAGE}"
+        imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        livenessProbe:
+          httpGet:
+            path: "/"
+            port: ${SERVER_PORT}
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+          periodSeconds: 10
+        env:
+        - name: FLASK_RUN_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: "${ENVIRONMENT}-svrconfig"
+              key: SERVER_HOSTNAME
+        - name: FLASK_RUN_PORT
+          value: "${SERVER_PORT}"
+        - name: PSQL_HOSTNAME
+          valueFrom:
+            secretKeyRef:
+              name: coresecrets
+              key: PSQL_HOSTNAME
+        - name: PSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: coresecrets
+              key: PSQL_PASSWORD
+        - name: PSQL_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: coresecrets
+              key: PSQL_USERNAME
+        - name: SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: coresecrets
+              key: SECRET_KEY        
+        - name: PSQL_DB_BOOKING
+          valueFrom:
+            configMapKeyRef:
+              name: psqlconfig
+              key: PSQL_DB_BOOKING
+        - name: PSQL_DB_PROFILES
+          valueFrom:
+            configMapKeyRef:
+              name: psqlconfig
+              key: PSQL_DB_PROFILES
+        - name: PSQL_DB_SCHEDULES
+          valueFrom:
+            configMapKeyRef:
+              name: psqlconfig
+              key: PSQL_DB_SCHEDULES
+        - name: PSQL_DB_SUBSCRIBERS
+          valueFrom:
+            configMapKeyRef:
+              name: psqlconfig
+              key: PSQL_DB_SUBSCRIBERS 
+        ports:
+        - containerPort: ${SERVER_PORT}
+          name: web
+        # volumeMounts:
+        # - name: logs
+        #   mountPath: /usr/src/
+
+      # volumes:
+      #   - name: logs
+      #     persistentVolumeClaim:
+      #       claimName: openhcspvclaim
+      restartPolicy: Always

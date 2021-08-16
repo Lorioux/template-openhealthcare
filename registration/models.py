@@ -253,6 +253,9 @@ class Doctor(dbase.Model):
     def find_all(self, criteria: any, *args, **kwargs):
         # criterion => speciality | location | mode | [speciality, location]
         # args => speciality_name | location | doctor_name | all
+        doctors = self.query.all()
+        if len(doctors) == 0:
+            return None
         if criteria == "speciality-only":
             speciality = Speciality().getby_title(title=kwargs["title"])
             if speciality:
@@ -291,7 +294,7 @@ class Doctor(dbase.Model):
             return self.query
 
     #
-    # @classmethod
+# @classmethod
     # def link_speciality(self, specialities: any):
 
     #     for speciality in specialities:

@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "OHC - The OpenHealthCare Services",
-    "description": "This is our Server for the development of Open Health Care Microservice APIs. Open Health Care APIs is a community and open source project aiming at provisiong a worldwide plaform from free basic healhcare service. The server can be run in containerized environment, and can be downloaded from [docker public](https://dockerhub.com/devopsxea/openhc_api) repository.",
+    "description": "This is our Server for the development of Open Health Care Microservice APIs. Open Health Care APIs is a community and open source project aiming at provisiong a worldwide plaform from free basic healhcare service. The server can be run in containerized environment, and can be downloaded from [docker public](https://hub.docker.com/repository/docker/devopsxpro/ohcs) repository.",
     "termsOfService": "http://swagger.io/terms/",
     "contact": {
       "email": "devops@merkatos.online"
@@ -14,8 +14,7 @@
     "version": "1.0.0"
   },
   "security": [
-    {"jwt_auth": []},
-    {"open_key":[]}
+    {"jwt_auth": []}
   ],
   "tags": [
     {
@@ -1912,22 +1911,6 @@
     },
     
     "securitySchemes": {
-      "oauth2": {
-        "description": "TOBE Implemented. DON'T USE",
-        "type": "oauth2",
-        "flows": {
-          "implicit": {
-            "authorizationUrl": "http://members.donatecare.io/auth/dialog",
-            "scopes": {
-              "write": "Grants write access",
-              "read": "Grants read access",
-              "admin": "Grants admin access"
-            }
-          }
-        },
-        "x-tokenInfoFunc": "swagger_server.controllers.authorization_controller.check_oauth2",
-        "x-scopeValidateFunc": "swagger_server.controllers.authorization_controller.validate_scope_oauth2"
-      },
       "api_key": {
         "type": "apiKey",
         "name": "api_key",

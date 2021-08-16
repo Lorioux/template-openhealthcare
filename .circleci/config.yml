@@ -52,20 +52,17 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
+          key: deps-{{ .Branch }}-{{ checksum "Pipefile"}}
       - run:
           name: create environment to run code analyze
           command: |
-            
             # require virtural environ 
-            python -m venv .venv 
-            . .venv/bin/activate
-            cp -rf ./ ./backend
+            make setup
       - run:
           name: install dependencies
           command: |
-            ls
-            make install 
+            make install
+            pip install 
       - run:
           name: run code lints
           command: 
@@ -78,6 +75,36 @@ jobs:
             - "/usr/local/lib/python3.6/site-packages"
           key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
   
+  tests:
+    docker:
+      - image: circleci/python:3.8.4
+      - image: circleci/postgres:9.6.16-alpine
+        environment:
+          POSTGRES_USERNAME: postgres
+          POSRGRES_PASSWORD: password
+          POSTGRES_PORT: 5432
+    environment:
+      PSQL_USERNAME: postgres
+      PSQL_PASSWORD: password
+      PSQL_HOSTNAME: localhost
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
+      - run:
+          name: prepare database for testing
+          command: |
+            psql -U ${PSQL_USERNAME} -w ${PSQL_PASSWORD} -c "CREATE DATABASE openhcs OWNER=${PSQL_PASSWORD} ENCODING=UTF8;"
+      - run:
+          name: run database migrartions tests
+          command: |
+            pipenv shell
+            make migrations
+      - run:
+          name: run code tests 
+          command: |
+           make tests 
+
   # analyze:
   #   description: Analyze backend source code
   #   docker:
@@ -85,7 +112,13 @@ jobs:
   #   # working_directory: ./ 
   #   steps:
   #     - checkout
-  #     - run: echo "Complete"
+  #     - restore_cache:
+  #         key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
+  #     - run:
+  #         name: check dependecies for security vulnarability
+  #         command: |
+  #           pipenv shell
+  #           pipenv check 
 
 
 workflows:
@@ -93,9 +126,8 @@ workflows:
   build_workflow:
     jobs:
       - build
-      # - build:
-      #     requires:
-      #     - analyze
+      - tests:
+          requires: [build]
       
       
         

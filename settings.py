@@ -13,46 +13,47 @@ class VARIABLES(object):
         super().__init__()
 
         self.PSQL_CONNECT_TIMEOUT = os.environ.get("PSQL_CONNECT_TIMEOUT", 10)
-        self.PSQL_SERVER_PORT = os.environ.get("POSL_SERVER_PORT", 5432)
+        self.PSQL_SERVER_PORT = os.environ.get("PSQL_SERVER_PORT", 5432)
 
         self.BOOKING = {
             "PSQL_USERNAME": os.environ.get("PSQL_USERNAME", "postgres"),
             "PSQL_PASSWORD": os.environ.get("PSQL_PASSWORD", "password"),
             "PSQL_SERVER_PORT": self.PSQL_SERVER_PORT,
             "PSQL_HOSTNAME": os.environ.get("PSQL_HOSTNAME", "localhost"),
-            "PSQL_DATABASE": os.environ.get("PSQL_DB_BOOKING", "donatecare"),
+            "PSQL_DATABASE": os.environ.get("PSQL_DB_BOOKING", "postgres"),
             "PSQL_CONNECT_TIMEOUT": self.PSQL_CONNECT_TIMEOUT,
         }
 
         self.PROFILES = self.BOOKING.copy()
         self.PROFILES["PSQL_DATABASE"] = os.environ.get(
-            "PSQL_DB_PROFILES", "donatecare"
+            "PSQL_DB_PROFILES", "postgres"
         )
 
         self.SCHEDULES = self.BOOKING.copy()
         self.SCHEDULES["PSQL_DATABASE"] = os.environ.get(
-            "PSQL_DB_SCHEDULES", "donatecare"
+            "PSQL_DB_SCHEDULES", "postgres"
         )
 
         self.SUBSCRIBERS = self.BOOKING.copy()
         self.SUBSCRIBERS["PSQL_DATABASE"] = os.environ.get(
-            "PSQL_DB_SUBSCRIBERS", "donatecare"
+            "PSQL_DB_SUBSCRIBERS", "postgres"
         )
 
+        self.set_secret()
 
-def setup_environ():
-    environ = get_key("./.env", "FLASK_ENV").__eq__("production")
-    secret = get_key("./.env", "SECRET_KEY").__eq__("")
-    if secret:
-        SECRET_KEY = os.urandom(128).hex("-")
-        os.environ["SECRET_KEY"] = SECRET_KEY
+    def set_secret(self):
+        environ = get_key("./.env", "FLASK_ENV").__eq__("production")
+        secret = get_key("./.env", "SECRET_KEY").__eq__("")
+        if secret:
+            SECRET_KEY = os.urandom(64).hex("-")
+            os.environ["SECRET_KEY"] = SECRET_KEY
 
-        if environ:
-            # if environ is in production
-            set_key("./.env", "SECRET_KEY", SECRET_KEY)
+            if environ:
+                # if environ is in production
+                set_key("./.env", "SECRET_KEY", SECRET_KEY)
 
-    # print(os.environ.get('FLASK_PORT'))
-    pass
+        # print(os.environ.get('FLASK_PORT'))
+        pass
 
 
 class Config:
@@ -60,8 +61,6 @@ class Config:
     Base configuration class. Contains default configuration settings +
      configuration settings applicable to all environments.
     """
-
-    setup_environ()
     VARIABLES = VARIABLES()
 
     # Default settings
@@ -115,7 +114,7 @@ class DevelopmentConfig(Config):
 
     SESSION_REFRESH_EACH_REQUEST = True
 
-    SESSION_COOKIE_NAME = "donatecare"
+    SESSION_COOKIE_NAME = "openhealthcare"
 
     JSONIFY_PRETTYPRINT_REGULAR = True
     # SERVER_NAME = "backend.localhost"
@@ -136,7 +135,7 @@ class TestingConfig(Config):
 
     SESSION_REFRESH_EACH_REQUEST = True
 
-    SESSION_COOKIE_NAME = "donatecare"
+    SESSION_COOKIE_NAME = "openhealthcare"
 
     JSONIFY_PRETTYPRINT_REGULAR = True
 

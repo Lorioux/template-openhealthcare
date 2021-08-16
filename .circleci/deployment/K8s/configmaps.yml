@@ -1,0 +1,33 @@
+# https://kubernetes.io/docs/concepts/configuration/configmap/
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: psqlconfig
+  namespace: default
+data:
+  PSQL_DB_PROFILES: profiles 
+  PSQL_DB_SUBSCRIBERS: subscribers
+  PSQL_DB_SCHEDULES: schedules 
+  PSQL_DB_BOOKING: booking
+
+--- 
+# https://kubernetes.io/docs/concepts/configuration/configmap/
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: stagging-svrconfig
+  namespace: default
+  labels:
+    environ: stagging
+data:
+  SERVER_HOSTNAME: "${SERVER_HOSTNAME_STAG}"
+---
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: production-svrconfig
+  namespace: default
+  labels:
+    environ: production
+data:
+  SERVER_HOSTNAME: "${SERVER_HOSTNAME_PRO}"

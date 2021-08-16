@@ -6,4 +6,5 @@ from backend.scheduling.models import *
 from backend.authentication.models import *
 from backend.authentication import token_required
 from backend import settings
-from backend import logs
+
+# from backend import logs

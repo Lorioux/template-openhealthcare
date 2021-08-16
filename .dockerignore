@@ -24,5 +24,9 @@ README.md
 README.rst
 migrations
 .git
-databases
+databases/*.db 
+databases/__pycache__
 manage.py
+.dbenv
+Pipefile
+Pipefile.lock

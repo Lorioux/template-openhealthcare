@@ -18,19 +18,12 @@ def configure_swagger(app: Flask, template):
             "description": "Production secure server",
             "variables": {
                 "protocol": {"default": "https", "enum": ["https", "http"]},
-                "hostname": {"default": "localhost"},
-                "port": {"default": "80", "enum": ["8080", "443", "80"]},
+                "hostname": {"default": "127.0.0.1"},
+                "port": {"default": "80", "enum": ["8080","443", "80"]},
                 "basePath": {"default": "v1"},
             },
         }
     ]
-    servers[0]["variables"]["port"]["default"] = os.getenv("FLASK_RUN_PORT", 80)
-    servers[0]["variables"]["hostname"]["default"] = os.environ.get(
-        "FLASK_RUN_HOST", "127.0.0.1"
-    )
-
-    if not app.debug:
-        servers[0]["variables"]["protocol"] = "https"
 
     app.config["SWAGGER"] = {
         "title": "OHCS API",
@@ -39,6 +32,30 @@ def configure_swagger(app: Flask, template):
         "basePath": "/v1",
     }
     # template["servers"] = servers
+    oauth2 = {
+        "description": "TOBE Implemented. DON'T USE",
+        "type": "oauth2",
+        "flows": {
+            "implicit": {
+                "authorizationUrl": "http://members.donatecare.io/auth/dialog",
+                "scopes": {
+                    "write": "Grants write access",
+                    "read": "Grants read access",
+                    "admin": "Grants admin access",
+                },
+            }
+        },
+        "x-tokenInfoFunc": "swagger_server.controllers.authorization_controller.check_oauth2",
+    }
+    if not app.debug:
+        servers[0]["variables"]["hostname"]["default"] = os.environ.get("FLASK_RUN_HOST", "127.0.0.1")
+        PORT = os.getenv("FLASK_RUN_PORT", '80')
+        servers[0]["variables"]["port"]["default"] = PORT
+        if PORT in ['80', '8080']:
+            servers[0]["variables"]["protocol"]['default'] = "http"
+        template["components"]["securitySchemes"].__delitem__("api_key")
+        template["servers"] = servers
+
     Swagger(app, template=template)
     pass
 
