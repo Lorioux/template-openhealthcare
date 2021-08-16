@@ -21,7 +21,7 @@ RUN apk --no-cache add libpq
 RUN mkdir /usr/src/openhcs
 WORKDIR /usr/src/openhcs
 
-COPY ./openhcs .
+COPY ./openhcs/ .
 
 EXPOSE 80 443 8080
 

@@ -2,7 +2,7 @@ setup:
 	# Preparing virtual environment to installing core dependencies
 	python -m pip install --upgrade pip  &&\
 	pip install pipenv &&\
-	# mkdir .venv &&\
+	if [ -e "./.venv" ]; then echo "Exist .venv"; else mkdir .venv; fi; 
 	pipenv --python 3.8 &&\
 	pipenv run pip install --upgrade pip
 
@@ -25,7 +25,7 @@ lint:
 	sudo ./hadolint --ignore DL3003 --ignore DL3018 ./Dockerfile
 	# Scanning source code
 	pipenv run black ./
-	pipenv run pylint --ignore=migrations,settings.py,manage.py -d W ./*.py
+	pipenv run pylint --ignore=migrations,settings.py,manage.py -d W ./openhcs/*.py
 
 migrations: 
 	pipenv run flask db init --multidb
