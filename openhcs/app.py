@@ -1,6 +1,7 @@
 #!/bin/env python
 from __future__ import absolute_import
 import os
+from pathlib import Path
 import logging
 from flasgger import Swagger
 from flask import Flask, jsonify, json
@@ -9,6 +10,9 @@ from openhcs.registration.microservice import profiles
 from openhcs.booking.microservice import bookings
 from openhcs.scheduling.microservice import schedules
 from openhcs.authentication.microservice import auth
+
+__here__ = os.path.abspath(os.path.dirname(__file__))
+Base_path = Path(__here__).parent
 
 
 def configure_swagger(app: Flask, template):
@@ -76,7 +80,7 @@ def make_app(environment=None):
     except OSError as error:
         logging.exception(error, stack_info=True)
 
-    with open("./swagger/openapi.json") as file:
+    with open(f"{__here__}/swagger/openapi.json") as file:
         template = json.loads(file.read())
         configure_swagger(app, template)
         file.close()

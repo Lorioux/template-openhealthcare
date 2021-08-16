@@ -2,10 +2,8 @@ setup:
 	# Preparing virtual environment to installing core dependencies
 	python -m pip install --upgrade pip  &&\
 	pip install pipenv &&\
-	if [ -e "./.venv" ]; then echo "Exist .venv"; else mkdir .venv; fi; 
-	pipenv --python 3.8 &&\
-	pipenv run pip install --upgrade pip
-
+	if [ -e "./.venv" ]; then echo "Exist .venv"; else mkdir .venv; pipenv --python 3.8; fi; 
+	. .venv/bin/activate
 install: setup
 	# Updating package installer
 	# Installing dependecies
@@ -17,6 +15,8 @@ install: setup
 		sudo wget -O hadolint https://github.com/hadolint/hadolint/releases/download/v1.16.3/hadolint-Linux-x86_64 &&\
 		sudo chmod +x hadolint; \
 	fi
+	# lock dependecies packages
+	pipenv lock
 	# install postgres dependency
 	sudo apt install python3-psycopg2
 	

@@ -12,4 +12,3 @@ migrations
 htmlcov
 __pycache__
 .coverage
-htmlcov

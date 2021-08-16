@@ -32,7 +32,7 @@ commands:
         default: yes
     steps:
       - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock" }}
+          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
 
       - run:
           name: install dependencies
@@ -62,15 +62,15 @@ jobs:
             make install
       - run:
           name: run code lints
-          command: 
+          command: |
             # format the source code 
             make lint
-      - save_cache:
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-            - "/usr/local/lib/python3.6/site-packages"
-          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
+      # - save_cache:
+      #     paths:
+      #       - ".venv"
+      #       - "/usr/local/bin"
+      #       - "/usr/local/lib/python3.6/site-packages"
+      #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock"}}
   
   tests:
     docker:
@@ -87,7 +87,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "Pipefile.lock"}}
+          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: prepare database for testing
           command: |
