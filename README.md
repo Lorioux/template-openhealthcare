@@ -1,3 +1,4 @@
+[![CircleCI](https://circleci.com/gh/Lorioux/theopenhealthcare/tree/main.svg?style=svg)](https://circleci.com/gh/Lorioux/theopenhealthcare/tree/main)
 ## The Open Heath Care Services API
 
 **OHCS API** is a community and opensource project for the delivery of API for free essential health care  services through digital technologies. We aim at provisioning Microservices and development server to support  worldwide adoption of eHealth specifically for essential health care.

@@ -24,6 +24,40 @@ commands:
             # TODO: destroy deployment stacks based on worflow ID
             # aws cloudformation destroy ----?
 
+  delete_failed_stack:
+    parameters:
+      stackName: 
+        type: string
+    steps:
+      - run:
+          name: deleting failed stack
+          when: on_fail
+          command: 
+            aws cloudformation delete-stack --stack-name << parmeters.stackName >>
+  
+  cache_handle:
+    description: helper command to store or retrieve values from MemoStash
+    parameters:
+      operation:
+        type: string
+        default: 'GET'
+        enum: ['GET', 'PUT']
+      key:
+        type: string 
+      value: 
+        type: string
+    steps:
+      - run:
+          command: |
+            OPER= << parameters.operation >>
+            KEY = << parameters.key >>
+            if [ "$OPER" == "GET" ];
+              export "$KEY"= $(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/{<< parameters.key >>}
+            else
+              VALUE= << parameters.value >>
+              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "$VALUE" https://api.memstash.io/values/$KEY
+            fi;
+  
   migrate:
     description: make database migrations
     parameters:
@@ -41,7 +75,7 @@ commands:
             make migrations
 
 jobs:
-  build:
+  build_app:
     description: Analyze backend source code
     docker:
       - image: circleci/python:3.8.4
@@ -67,10 +101,10 @@ jobs:
             - "/usr/local/bin"
           key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
     
-  tests:
+  test_app:
     docker:
       - image: circleci/python:3.8.4
-      - image: circleci/postgres:9.6.16-alpine
+      - image: circleci/postgres:9.6.16
         environment:
           POSTGRES_USERNAME: postgres
           POSRGRES_PASSWORD: password
@@ -83,22 +117,23 @@ jobs:
       FLASK_APP: "openhcs/app.py"
     steps:
       - checkout
-      - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
+      # - restore_cache:
+      #     key: deps-{{ .Branch }}-{{ checksum "Pipfile.lock" }}
       - run:
           name: Install dependencies
           command: |
             sudo apt update 
             sudo apt-get install -y postgresql-client --fix-missing
-            # make install    
+            make install    
       - run:
           name: run local database migrartions tests
           command: |
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            make migrations
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            pipenv run flask populate --tables=all; 
+            # make migrations
       - run:
           name: run code tests 
           command: |
@@ -109,27 +144,94 @@ jobs:
       - image: circleci/python:3.8.4
     environment:
       FLASK_APP: "openhcs/app.py"
-    working_directory: ~/
     steps:
       - checkout
       - run:
           name: migrate databases 
           command: | 
-            echo ${PSQL_HOSTNAME}
+            echo "${PSQL_HOSTNAME}"
+
+  build_image:
+    description: build the docker image from code
+    machine: 
+      image: ubuntu-2004:202107-02
+    environment:
+      OPENHCS_IMAGE_TAG: ${DOCKER_ID}/openhcs:latest
+    steps:
+      - checkout
+      - run:
+          name: login to docker hub
+          command: docker login --username ${DOCKER_ID} --password ${DOCKER_PASSWORD}
+      - run:
+          name: build the image
+          command: |
+            docker build . -t openhcs:latest
+            docker tag openhcs:latest $OPENHCS_IMAGE_TAG
+      - run:
+          name: push image
+          command: |
+            docker push ${OPENHCS_IMAGE_TAG}
+
+
+  create_infrastructure:
+    description: provision the cluster infrastructue 
+    docker: 
+      - image: amazon/aws-cli
+    environment:
+      CLUSTER_IaC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID[0:5]}"
+    steps:
+      - checkout
+      - run:
+          name: create the network infrastructure
+          command: |
+            cd .circleci/deployment/IaC
+            DEPLOY=$(./xbin/cfn-deploy.sh  "$CLUSTER_IaC_STACK_NAME" clusterIaC.yml "${AWS_DEFAULT_REGION}"  $CLUSTER_IaC)
+            if [ "$DEPLOY" != *"Success"* ]
+              aws cloudformation delete-stack --stack-name $CLUSTER_IaC;
+              exit 1;
+            else
+              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "" https://api.memstash.io/values/OHCS_IAC_NAME
+              # curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/OHCS_IAC_NAME
+            fi;
+      - cache_handle:
+          operation: 'PUT'
+          key: "OHCS_IAC_NAME"
+          value: ${CLUSTER_IaC_STACK_NAME}
+      - delete_failed_stack:
+          stackName: ${CLUSTER_IaC}     
+
 
 
 workflows:
   version: 2
-  build_workflow:
+  CI_workflow:
     jobs:
-      - build
-      - tests:
+      - build_app
+      - test_app:
           requires:
-            - "build"
+            - "build_app"
       - make_migrations:
           requires:
-            - "tests"
-  # testing:
-  #   jobs:
-  #     - coverage  
+            - "test_app"
+      - review_codebase:
+          type: approval
+          requires:
+            - test_app
+      - build_image:
+          filters:
+            branches:
+              only: [main]
+          requires:
+            - test_app
+            - review_codebase
+      - hold:
+          requires: [build_image]
+          type: approval
+      - create_infrastructure:
+          requires:
+            - hold
+          filters:
+            branches:
+              only: [main]
+
         
