@@ -51,8 +51,6 @@ jobs:
     # working_directory: ./
     steps:
       - checkout
-      - restore_cache:
-          key: deps-{{ .Branch }}-{{ checksum "Pipefile"}}
       - run:
           name: create environment to run code analyze
           command: |
@@ -62,7 +60,6 @@ jobs:
           name: install dependencies
           command: |
             make install
-            pip install 
       - run:
           name: run code lints
           command: 
@@ -98,7 +95,6 @@ jobs:
       - run:
           name: run database migrartions tests
           command: |
-            pipenv shell
             make migrations
       - run:
           name: run code tests 

@@ -1,9 +1,10 @@
 setup: 
 	# Preparing virtual environment to installing core dependencies
-	python -m pip install pipenv &&\
+	python -m pip install --upgrade pip  &&\
+	pip install pipenv &&\
+	# mkdir .venv &&\
 	pipenv --python 3.8 &&\
-	pipenv shell &&\
-	python -m pip install --upgrade pip
+	pipenv run pip install --upgrade pip
 
 install: setup
 	# Updating package installer
@@ -19,23 +20,23 @@ install: setup
 	# install postgres dependency
 	sudo apt install python3-psycopg2
 	
-lint: install
+lint: 
 	# Scanning dockerfile
 	sudo ./hadolint --ignore DL3003 --ignore DL3018 ./Dockerfile
 	# Scanning source code
-	black ./
-	pylint --ignore=migrations,settings.py,manage.py -d W ./*.py
+	pipenv run black ./
+	pipenv run pylint --ignore=migrations,settings.py,manage.py -d W ./*.py
 
 migrations: 
-	flask db init --multidb
-	flask db stamp head
-	flask db migrate
-	flask db upgrade
+	pipenv run flask db init --multidb
+	pipenv run flask db stamp head
+	pipenv run flask db migrate
+	pipenv run flask db upgrade
 
-test:
+test: 
 	# Running test with converage
-	coverage run -m py.test -vv &&\
-    coverage report -m --fail-under=70 &&\
+	pipenv run coverage run -m py.test -vv &&\
+    pipenv run coverage report -m --fail-under=70 &&\
 	rm -f ./hadolint
 
 

@@ -18,10 +18,10 @@ COPY --from=builder /install /usr/local
 RUN apk --no-cache add libpq
 
 
-RUN mkdir /usr/src/backend
-WORKDIR /usr/src/backend
+RUN mkdir /usr/src/openhcs
+WORKDIR /usr/src/openhcs
 
-COPY . .
+COPY ./openhcs .
 
 EXPOSE 80 443 8080
 

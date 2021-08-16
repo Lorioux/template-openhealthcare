@@ -1,3 +1,0 @@
-[{"stmt":"SELECT * FROM appointments;",
-    "header":["id","date","time","doctName","doctSpeciality","doctIdentity","doctAddress","beneficiaryName","beneficiaryPhone","beneficiaryNif"],
-    "rows":[["1","04/07/2021","12:00","Dr. John Doe","Nutricionist","cacascavavavavavaefvagsfafdaadfavbadgsefaegfvgsbsgfva","NULL","Magido Mascate","351920000000","mmndmajdladandadmasjscavavadcavasavsd"]]}]
