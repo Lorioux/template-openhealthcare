@@ -192,7 +192,10 @@ jobs:
           name: create the network infrastructure
           working_directory: ".circleci/deployment/IaC"
           command: |
-            DEPLOY=$( aws cloudformation deploy --stack-name ${CLUSTER_IAC_STACKNAME} --template-file clusterIaC.yml --region "${AWS_DEFAULT_REGION}" --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" --parameter-overrides ClusterIaCStackName=${CLUSTER_IAC_STACKNAME} --profile default )
+            DEPLOY=$( aws cloudformation deploy --stack-name ${CLUSTER_IAC_STACK_NAME} \
+            --template-file clusterIaC.yml --region "${AWS_DEFAULT_REGION}" \
+            --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+            --parameter-overrides ClusterIaCStackName=${CLUSTER_IAC_STACK_NAME} --profile default )
             if [ "$DEPLOY" != *"Success"* ];
               then
                 exit 1;
@@ -221,7 +224,10 @@ jobs:
           command: |
             # retrieve cluster Infra StackName 
             STACK_NAME=$(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/CLUSTER_IAC_STACKNAME )
-            DEPLOY=$( aws cloudformation deploy --stack-name ${CLUSTER_STACK_NAME} --template-file clusterIaC.yml --region ${AWS_DEFAULT_REGION} --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" --parameter-overrides ClusterIaCStackName=$STACK_NAME --profile default )
+            DEPLOY=$( aws cloudformation deploy --stack-name ${CLUSTER_STACK_NAME} \
+            --template-file clusterIaC.yml --region ${AWS_DEFAULT_REGION} \
+            --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+            --parameter-overrides ClusterIaCStackName=$STACK_NAME --profile default )
             if [ "$DEPLOY" != *"Success"* ]; 
               then
                 exit 1;
