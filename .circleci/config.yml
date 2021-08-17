@@ -84,6 +84,7 @@ jobs:
       - run:
           name: create environment to run code analyze
           command: |
+            echo "${CIRCLE_WORKFLOW_ID}[0:5]"
             # require virtural environ 
             make setup
       - run:
@@ -128,10 +129,10 @@ jobs:
       - run:
           name: run local database migrartions tests
           command: |
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            # psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
+            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
             pipenv run flask populate --tables=all; 
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\l"
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\dt"
@@ -141,17 +142,7 @@ jobs:
           command: |
            make test
 
-  make_migrations:
-    docker:
-      - image: circleci/python:3.8.4
-    environment:
-      FLASK_APP: "openhcs/app.py"
-    steps:
-      - checkout
-      - run:
-          name: migrate databases 
-          command: | 
-            echo "${PSQL_HOSTNAME}"
+  
 
   build_image:
     description: build the docker image from code
@@ -180,7 +171,7 @@ jobs:
     docker: 
       - image: amazon/aws-cli
     environment:
-      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID[0:5]}"
+      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID}[0:5]"
     steps:
       - checkout
       - run:
@@ -200,7 +191,22 @@ jobs:
           key: "OHCS_IAC_NAME"
           value: ${CLUSTER_IAC_STACK_NAME}
       - delete_failed_stack:
-          stackName: ${CLUSTER_IaC}     
+          stackName: ${CLUSTER_IAC_STACK_NAME}   
+
+
+
+
+  make_migrations:
+    docker:
+      - image: circleci/python:3.8.4
+    environment:
+      FLASK_APP: "openhcs/app.py"
+    steps:
+      - checkout
+      - run:
+          name: migrate databases 
+          command: | 
+            echo "${PSQL_HOSTNAME}"  
 
 
 workflows:

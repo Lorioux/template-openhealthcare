@@ -6,9 +6,9 @@ RUN mkdir /install
 RUN apk update && apk add --no-cache --virtual .build-deps \
     postgresql-dev \
     g++ \ 
-    musl-dev                                                           
+    musl-dev \                                                          
 WORKDIR /install                                                                                                              
-COPY requirements.txt /requirements.txt                                                                                       
+COPY ./openhcs/requirements.txt /requirements.txt                                                                                       
 RUN pip install --prefix=/install -r /requirements.txt
 RUN apk del --no-cache .build-deps
 
