@@ -95,11 +95,10 @@ jobs:
           command: |
             # format the source code 
             make lint
-      - save_cache:
-          paths:
-            - ".venv"
-            - "/usr/local/bin"
-          key: deps-{{ checksum "Pipfile.lock" }}
+      # - save_cache:
+      #     paths:
+      #       - ".venv"
+      #     key: deps-{{ checksum "Pipfile.lock" }}
     
   test_app:
     docker:
@@ -117,15 +116,15 @@ jobs:
       FLASK_APP: "openhcs/app.py"
     steps:
       - checkout
-      - restore_cache:
-          keys: 
-            - deps-{{ checksum "Pipfile.lock" }}
+      # - restore_cache:
+      #     keys: 
+      #       - deps-{{ checksum "Pipfile.lock" }}
       - run:
           name: Install dependencies
           command: |
             sudo apt update 
             sudo apt-get install -y postgresql-client --fix-missing
-            # make install    
+            make install    
       - run:
           name: run local database migrartions tests
           command: |
