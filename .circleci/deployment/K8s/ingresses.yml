@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   annotations:
     kubernetes.io/ingress.class: alb
-  name: stagging-openhcs
+  name: staging-openhcs
   namespace: default
 spec:
   rules:

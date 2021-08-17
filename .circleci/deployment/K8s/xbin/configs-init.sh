@@ -2,7 +2,7 @@
 
 CONFIGS_FILE=$1
 
-STAGG_LB_IP=$(kubectl get services -n default -l environ=stagging,tier=backend -o=jsonpath="{.items[0].status.loadBalancer.ingress[*].ip}")
+STAGG_LB_IP=$(kubectl get services -n default -l environ=staging,tier=backend -o=jsonpath="{.items[0].status.loadBalancer.ingress[*].ip}")
 
 PRO_LB_IP=$(kubectl get services -n default -l environ=production,tier=backend -o=jsonpath="{.items[0].status.loadBalancer.ingress[*].ip}")
 

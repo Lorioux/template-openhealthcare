@@ -1,5 +1,6 @@
 #!/bin/bash 
-# FILE=$1
+
+FILE=$1
 # NAMESPACE=$2
 
 # check if secret_key is set.
@@ -23,6 +24,6 @@ else
     fi
 fi;
 
-cat ../secrets.yml | envsubst | kubectl apply -f - ;
+cat $FILE | envsubst | kubectl apply -f - ;
 
 exit 0;

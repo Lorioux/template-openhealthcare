@@ -11,7 +11,7 @@ OPENHCS_IMAGE=$4;   # docker image
 LOADBL_IP="";       # Load balancer IP 
 
 # Retrieve the loadbalancer domain name for each environment
-if [[ -n "$ENVIRON" && "$ENVIRON" == "stagging" ]]; then 
+if [[ -n "$ENVIRON" && "$ENVIRON" == "staging" ]]; then 
     # if [[ -n $(echo "127.0.0.1" | grep -E "^[0-9]{1,3}(\.[0-9]{1,3}){3}$") ]]; then echo TRUE; else echo FALSE; fi; 
     LOADBL_IP=$(kubectl get services -n default -l environ="$ENVIRON",app="openhcs" -o=jsonpath="{.items[0].status.loadBalancer.ingress[0].ip}" )
 elif [[ -n "$ENVIRON" && "$ENVIRON" == "production" ]]; then
@@ -25,7 +25,7 @@ fi;
 if [[ -n "$LOADBL_IP" ||  -n $(echo "$LOADBL_IP" | grep -E "^[0-9]{1,3}(\.[0-9]{1,3}){3}$") ]]; then 
     
     # Update the server hostname for this environ, IF needed
-    # if [[ "$ENVIRON" == "stagging" ]]; then
+    # if [[ "$ENVIRON" == "staging" ]]; then
     #     export SERVER_HOSTNAME_STAG=$LOADBL_IP;
     # else
     #     export SERVER_HOSTNAME_PRO=$LOADBL_IP;
@@ -44,8 +44,8 @@ if [[ -n "$LOADBL_IP" ||  -n $(echo "$LOADBL_IP" | grep -E "^[0-9]{1,3}(\.[0-9]{
         export SERVER_PORT=$SERVER_PORT;
 
         case "$ENVIRON" in 
-            # deploy for stagging environment as blue context
-            stagging)
+            # deploy for staging environment as blue context
+            staging)
                 export CONTEXT=green
                 cat ./deployments.yml | envsubst | kubectl apply -f - ;
                 ;;
@@ -53,7 +53,7 @@ if [[ -n "$LOADBL_IP" ||  -n $(echo "$LOADBL_IP" | grep -E "^[0-9]{1,3}(\.[0-9]{
                 # deploy for production environment as blue context
                 echo creating
                 export CONTEXT=blue
-                cat ./deployments.yml | envsubst | kubectl replace --force -f - ;
+                cat ./deployments.yml | envsubst | kubectl apply --force -f - ;
                 ;;
             *)
             exit 1;

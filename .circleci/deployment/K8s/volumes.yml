@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: openhcsvolume
-  namespace: stagging
+  namespace: staging
 spec:
   capacity:
     storage: 10Gi
@@ -20,7 +20,7 @@ spec:
     required:
       nodeSelectorTerms:
         - matchExpressions:
-            - {key: environ, operator: In, values: [stagging, production]}
+            - {key: environ, operator: In, values: [staging, production]}
 
 ---
 # https://kubernetes.io/docs/concepts/storage/persistent-volumes/
@@ -28,7 +28,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: openhcspvclaim
-  namespace: stagging
+  namespace: staging
   labels:
     app: openhcs
 spec:
@@ -40,5 +40,5 @@ spec:
       storage: 2Gi
   selector:
     matchLabels:
-      environ: stagging
+      environ: staging
 ---

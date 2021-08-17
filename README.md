@@ -3,7 +3,7 @@
 
 **OHCS API** is a community and opensource project for the delivery of API for free essential health care  services through digital technologies. We aim at provisioning Microservices and development server to support  worldwide adoption of eHealth specifically for essential health care.
 
-The core concepts of the microservices archetecture are practitioners, beneficiaries, caregivers, appointments, schedules, consultations, healthrecords, treatment plans, heath report, membership registries,  medical knowledge, notifications, donation, prediction and diagnosis. The project development adopts stagging strategy aiming at incremental development process through **Continuous Delivery**.
+The core concepts of the microservices archetecture are practitioners, beneficiaries, caregivers, appointments, schedules, consultations, healthrecords, treatment plans, heath report, membership registries,  medical knowledge, notifications, donation, prediction and diagnosis. The project development adopts staging strategy aiming at incremental development process through **Continuous Delivery**.
 
 The simplest microservices to be implemented through the API are categorized based on the stakeholders' core needs:
 

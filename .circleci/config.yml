@@ -1,4 +1,8 @@
-version: 2.0
+version: 2.1
+
+orbs:
+  aws-eks: circleci/aws-eks@1.1.0
+  kubernetes: circleci/kubernetes@0.12.0
 
 commands:
   destroy_environ:
@@ -6,35 +10,38 @@ commands:
     parameters:
       awsConfigStatus:
         type: enum
-        default: "configured"
-        enum: ["configured", "notconfigured"]
+        default: "yes"
+        enum: ["yes", "no"]
+      clusteNetworkStackName: 
+        type: string 
+      clusterCoreStackName:
+        type: string 
     steps:
       - run:
           name: destroy deployment environment
           when: on_fail
           command: |
             awsStatus=<parameters.awsConfigStatus>
-            if [ $awsStatus == "notconfigured"]
+            if [ "$awsStatus" == "no"]
               then
                 # TODO: install awscli
+                exit 1;
                 # TODO: configure awscli profile
+            fi;
+            
+            NETWSTACK= << parameters.clusteNetworkStackName >> 
+            CLUSTSTACK= << parameters.clusterCoreStackName >>
+            STACKNAMES=( "$CLUSTSTACK"  "$NETWSTACK" )
+            if [ "${STACKNAMES}[@]" == "yes" ];
+              then 
+                for name in "${STACKNAMES}[@]" ;
+                do 
+                  if [ -n "$name" ]; then 
+                    aws cloudformation delete-stack --stack-name $name;
+                  fi;  
+                done;
+            else
 
-            # TODO: destoy the environment starting from S3 resources  emptying
-            # aws s3 rm s3://<backed_name>/resouce_name --recursive --force
-            # TODO: destroy deployment stacks based on worflow ID
-            # aws cloudformation destroy ----?
-
-  delete_failed_stack:
-    parameters:
-      stackName: 
-        type: string
-    steps:
-      - run:
-          name: deleting failed stack
-          when: on_fail
-          command: 
-            aws cloudformation delete-stack --stack-name << parmeters.stackName >>
-  
   cache_handle:
     description: helper command to store or retrieve values from MemoStash
     parameters:
@@ -62,7 +69,7 @@ commands:
     description: make database migrations
     parameters:
       versionChanged:
-        type: bool
+        type: boolean
         default: yes
     steps:
       - run:
@@ -138,13 +145,12 @@ jobs:
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\dt"
             # make migrations
       - run:
-          name: run code tests 
+          name: run code coverage tests 
           command: |
-           make test
+            # pass IF coverage > 70%
+            make test
 
-  
-
-  build_image:
+  build_docker_image:
     description: build the docker image from code
     machine: 
       image: ubuntu-2004:202107-02
@@ -164,36 +170,138 @@ jobs:
       - run:
           name: push openhcs image to docker hub
           command: |
+            export docker_path=${DOCKER_ID}/openhcs:latest
             docker push $docker_path
 
-
-  create_infrastructure:
+  create_cluster_infrastructure:
     description: provision the cluster infrastructue 
     docker: 
       - image: amazon/aws-cli
+    environment:
+      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID::10}"
     steps:
       - checkout
       - run:
           name: create the network infrastructure
+          working_directory: ".circleci/deployment/IaC"
           command: |
-            cd .circleci/deployment/IaC
-            DEPLOY=$(./xbin/cfn-deploy.sh  "$CLUSTER_IAC_STACK_NAME" clusterIaC.yml "${AWS_DEFAULT_REGION}"  $CLUSTER_IaC)
-            if [ "$DEPLOY" != *"Success"* ]
-              aws cloudformation delete-stack --stack-name $CLUSTER_IaC;
-              exit 1;
+            sudo chmod +x ./xbin/cfn-deploy.sh
+            DEPLOY=$( sudo ./xbin/cfn-deploy.sh  "$CLUSTER_IAC_STACK_NAME" clusterIaC.yml "${AWS_DEFAULT_REGION}"  $CLUSTER_IaC)
+            if [ "$DEPLOY" != *"Success"* ];
+              then
+                sudo aws cloudformation delete-stack --stack-name $CLUSTER_IaC;
+                exit 1;
             else
-              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "" https://api.memstash.io/values/OHCS_IAC_NAME
+              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "$CLUSTER_IAC_STACK_NAME" https://api.memstash.io/values/OHCS_IAC_NAME
               # curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/OHCS_IAC_NAME
             fi;
       - cache_handle:
           operation: 'PUT'
           key: "OHCS_IAC_NAME"
           value: ${CLUSTER_IAC_STACK_NAME}
-      - delete_failed_stack:
-          stackName: ${CLUSTER_IAC_STACK_NAME}   
+      - destroy_environ:
+          awsConfigStatus: "yes"
+          clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
+          clusterCoreStackName: ''  
 
+  create_cluster_core:
+    description: create cluster control plane and workload node 
+    docker:
+      - image: amazon/aws-cli
+    environment:
+      CLUSTER_STACK_NAME: "CLUSTER-OHCS-${CIRCLE_WORKFLOW_ID::10}"
+    steps:
+      - checkout
+      - aws-eks/install-eksctl
+      - run:
+          name: create cluster and managed node groups
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            # retrieve cluster Infra StackName 
+            STACK_NAME=$(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/OHCS_IAC_NAME )
+            sudo chmod +x ./xbin/cfn-deploy.sh 
+            DEPLOY=$( sudo ./xbin/cfn-deploy.sh  "$CLUSTER_STACK_NAME" clusterCore.yml "${AWS_DEFAULT_REGION}"  $STACK_NAME ) 
+            if [ "$DEPLOY" != *"Success"* ]; 
+              then
+                # aws cloudformation delete-stack --stack-name "$CLUSTER_STACK_NAME";
+                exit 1;
+            fi;
+      - run:
+          name: enable cluster logging types 
+          command: |
+            eksctl utils update-cluster-logging --enable-types=all --approve
+      # destroy
+      - destroy_environ:
+          awsConfigStatus: "yes"
+          clusteNetworkStackName: 'OHCS-${CIRCLE_WORKFLOW_ID::10}'
+          clusterCoreStackName: ${CLUSTER_STACK_NAME}
 
+  configure_cluster_core:
+    description: configure cluster kubernetes 
+    docker:
+      # replace with your preferred image
+      - image: cimg/base:stable
+    environment:
+      CLUSTER_STACK_NAME: "CLUSTER-OHCS-${CIRCLE_WORKFLOW_ID::10}"
+      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID::10}"
+      GREEN_SERVER_PORT: 443
+      BLUE_SERVER_PORT: 443
+    steps:
+      - checkout
+      - kubernetes/install-kubectl:
+          kubectl-version: latest  
+      - aws-eks/update-kubeconfig-with-authenticator: 
+          aws-region: "${AWS_DEFAULT_REGION}"
+          cluster-name: "${CLUSTER_NAME}"
+      # pesist the kubeconfig file 
+      - persist_to_workspace:
+          root: ~/
+          paths:
+            - ".kube"
+      - run:
+          name: test kubernetes config file 
+          command: |
+            SVCS=$(kubectl  get serivces -n kube-system -o json)
+            # Abort deployment if empty 
+            if [ "$SVCS" = *"kube-system" ]; then 
+              echo "Cofigured Successfully";
+              ls ~/.kube
+            else
+              exit 1;
+            fi;
+      - run:
+          name: create services for app deployment  
+          command: |
+            # create services
+            cd .circleci/deployment/K8s/xbin
+            ./services-init.sh $GREEN_SERVER_PORT;
+      - run:
+          name: create alb ingresses
+          command: |
+            cd .circleci/deployment/K8s
+            kubectl apply -f ../ingresses.yml
+            sleep 10s
+            kubectl get ig -n default
+      - run:
+          name: create configmaps and secretes 
+          command: |
+            cd .circleci/deployment/K8s
+            # create configmaps
+            ./xbin/configs-init.sh .configmaps.yml
 
+            # create secrets 
+            ./xbin/secrets-init.sh secrets.yml
+
+            kube get secrets -n default
+      
+
+      - destroy_environ:
+          awsConfigStatus: "yes"
+          clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
+          clusterCoreStackName: ${CLUSTER_STACK_NAME}
+          
+
+    
 
   make_migrations:
     docker:
@@ -209,8 +317,7 @@ jobs:
 
 
 workflows:
-  version: 2
-  CI_workflow:
+  CICD_workflow:
     jobs:
       - build_app
       - test_app:
@@ -220,7 +327,7 @@ workflows:
           type: approval
           requires:
             - test_app
-      - build_image:
+      - build_docker_image:
           context: THEOPENHCS
           filters:
             branches:
@@ -236,17 +343,36 @@ workflows:
             branches:
               only: [main]
       - hold:
-          requires: [build_image]
+          requires: [build_docker_image]
           type: approval
       
-      - create_infrastructure:
+      - create_cluster_infrastructure:
           context: THEOPENHCS
+          pre-steps:
+            - run:
+                name: Notify administrator
+                command: |
+                  echo  "Send notification from here"
           requires:
             - hold
           filters:
             branches:
               only: [main]
 
-      
+      - create_cluster_core:
+          context: THEOPENHCS
+          requires:
+            - create_cluster_infrastructure
 
-        
+      - configure_cluster_core:
+          context: THEOPENHCS
+          requires:
+            - "create_cluster_core"
+          filters:
+            branches:
+              only: [main]
+          post-steps:
+            - run:
+                name: Notify administrator
+                command: |
+                  echo "Send notification from here"

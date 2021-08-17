@@ -20,7 +20,7 @@ metadata:
   namespace: default
   labels:
     app: openhcs
-    environ: stagging 
+    environ: staging 
     tier: backend
 spec:
   type: NodePort
@@ -30,7 +30,7 @@ spec:
     name: web
   selector:
     app: openhcs
-    environ: stagging
+    environ: staging
     context: green
 
 ---

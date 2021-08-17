@@ -15,10 +15,10 @@ data:
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: stagging-svrconfig
+  name: staging-svrconfig
   namespace: default
   labels:
-    environ: stagging
+    environ: staging
 data:
   SERVER_HOSTNAME: "${SERVER_HOSTNAME_STAG}"
 ---
