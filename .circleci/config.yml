@@ -159,19 +159,18 @@ jobs:
           name: build the openhcs docker image
           command: |
             docker build . -t openhcs:latest
-            docker tag openhcs:latest $OPENHCS_IMAGE_TAG
+            export docker_path=${DOCKER_ID}/openhcs:latest
+            docker tag openhcs:latest $docker_path
       - run:
           name: push openhcs image to docker hub
           command: |
-            docker push ${OPENHCS_IMAGE_TAG}
+            docker push $docker_path
 
 
   create_infrastructure:
     description: provision the cluster infrastructue 
     docker: 
       - image: amazon/aws-cli
-    environment:
-      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID::8}"
     steps:
       - checkout
       - run:
