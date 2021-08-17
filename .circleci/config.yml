@@ -36,7 +36,7 @@ commands:
             STACKNAMES=( "$CLUSTSTACK"  "$NETWSTACK" )
             for name in "${STACKNAMES[@]}" ; do 
               stack=$(aws cloudformation list-stacks --query "StackSummaries[?(@.StackName=='$name')]")
-              if [ "$stack" = *"name"* ]; then 
+              if [ "$stack" =~ *"$name"* ]; then 
                 aws cloudformation delete-stack --stack-name $name --region "${AWS_DEFAULT_REGION}";
               fi;  
             done;         
@@ -55,13 +55,13 @@ commands:
     steps:
       - run:
           command: |
-            OPER= << parameters.operation >>
-            KEY = << parameters.key >>
-            if [ "$OPER" == "GET" ];
-              export "$KEY"= $(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/{<< parameters.key >>}
+            OPER=<< parameters.operation >>;
+            KEY=<< parameters.key >>;
+            if [ "$OPER" == "GET" ]; then
+              curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/$KEY
             else
-              VALUE= << parameters.value >>
-              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "$VALUE" https://api.memstash.io/values/$KEY
+              VALUE=<< parameters.value >>
+              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "$VALUE" https://api.memstash.io/values/$KEY;
             fi;
 
   setup_awscli:
@@ -177,19 +177,15 @@ jobs:
           name: create the network infrastructure
           working_directory: ".circleci/deployment/IaC"
           command: |
-            DEPLOY=$( aws cloudformation deploy --stack-name ${CLUSTER_IAC_STACK_NAME} \
+            aws cloudformation deploy --stack-name ${CLUSTER_IAC_STACK_NAME} \
             --template-file clusterIaC.yml --region "${AWS_DEFAULT_REGION}" \
             --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-            --parameter-overrides ClusterIaCStackName=${CLUSTER_IAC_STACK_NAME} --profile default )
-            echo "$DEPLOY" >> .tmp
-            if [ -z $( echo .tmp | egrep "Success" - ) ]; 
-              then
-                exit 1;
-            fi;
-      - cache_handle:
-          operation: 'PUT'
-          key: "CLUSTER_IAC_STACKNAME"
-          value: ${CLUSTER_IAC_STACK_NAME}
+            --parameter-overrides ClusterIaCStackName=${CLUSTER_IAC_STACK_NAME} --profile default 
+            
+      # - cache_handle:
+      #     operation: 'PUT'
+      #     key: "CLUSTER_IAC_STACKNAME"
+      #     value: ${CLUSTER_IAC_STACK_NAME}
       - destroy_environ:
           awsConfigStatus: "yes"
           clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
@@ -209,25 +205,21 @@ jobs:
           working_directory: ".circleci/deployment/IaC"
           command: |
             # retrieve cluster Infra StackName 
-            STACK_NAME=$(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/CLUSTER_IAC_STACKNAME )
-            DEPLOY=$( aws cloudformation deploy --stack-name ${CLUSTER_STACK_NAME} \
+            # STACK_NAME=$(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/CLUSTER_IAC_STACKNAME )
+            aws cloudformation deploy --stack-name ${CLUSTER_STACK_NAME} \
             --template-file clusterIaC.yml --region ${AWS_DEFAULT_REGION} \
             --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-            --parameter-overrides ClusterIaCStackName=$STACK_NAME --profile default )
-            echo "$DEPLOY" >> .tmp
-            if [ -z $( echo .tmp | egrep "Success" - ) ]; 
-              then
-                exit 1;
-            fi;
+            --parameter-overrides ClusterIaCStackName="openhcs-iacode" --profile default 
+            
       - run:
           name: enable cluster logging types 
           command: |
             eksctl utils update-cluster-logging --enable-types=all --approve
       # destroy
-      - cache_handle:
-          operation: 'PUT'
-          key: "CLUSTER_STACK_NAME"
-          value: $CLUSTER_STACK_NAME
+      # - cache_handle:
+      #     operation: 'PUT'
+      #     key: "CLUSTER_STACK_NAME"
+      #     value: $CLUSTER_STACK_NAME
       - destroy_environ:
           awsConfigStatus: "yes"
           clusteNetworkStackName: openhcs-iacode
