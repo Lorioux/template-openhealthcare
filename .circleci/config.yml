@@ -169,7 +169,7 @@ jobs:
       - image: cimg/base:stable
       # - image: amazon/aws-cli
     environment:
-      CLUSTER_IAC_STACK_NAME: ohcs-${CIRCLE_WORKFLOW_ID}
+      CLUSTER_IAC_STACK_NAME: openhcs-iacode
     steps:
       - checkout
       - setup_awscli
@@ -199,7 +199,7 @@ jobs:
     docker:
       - image: cimg/base:stable
     environment:
-      CLUSTER_STACK_NAME: cluster-ohcs-${CIRCLE_WORKFLOW_ID}
+      CLUSTER_STACK_NAME: openhcs-cluster
     steps:
       - checkout
       - setup_awscli
@@ -228,8 +228,8 @@ jobs:
           value: $CLUSTER_STACK_NAME
       - destroy_environ:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: ohcs-${CIRCLE_WORKFLOW_ID}
-          clusterCoreStackName: ${CLUSTER_STACK_NAME}
+          clusteNetworkStackName: openhcs-iacode
+          clusterCoreStackName: openhcs-cluster
 
   configure_cluster_core:
     description: configure cluster kubernetes 
@@ -237,8 +237,8 @@ jobs:
       # replace with your preferred image
       - image: cimg/base:stable
     environment:
-      CLUSTER_STACK_NAME: cluster-ohcs-${CIRCLE_WORKFLOW_ID}
-      CLUSTER_IAC_STACK_NAME: ohcs-${CIRCLE_WORKFLOW_ID}
+      CLUSTER_STACK_NAME: openhcs-cluster
+      CLUSTER_IAC_STACK_NAME: openhcs-iacode
       GREEN_SERVER_PORT: 443
       BLUE_SERVER_PORT: 443
     steps:
