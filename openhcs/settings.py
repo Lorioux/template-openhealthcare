@@ -43,8 +43,8 @@ class VARIABLES(object):
 
     def set_secret(self):
         if load_dotenv("./.env"):
-            environ = os.getenv("FLASK_ENV").__eq__("production")
-            secret = os.getenv("SECRET_KEY").__eq__("")
+            environ = os.getenv("FLASK_ENV", '').__eq__("production")
+            secret = os.getenv("SECRET_KEY", '').__eq__("")
         if secret:
             SECRET_KEY = os.urandom(64).hex("-")
             os.environ["SECRET_KEY"] = SECRET_KEY

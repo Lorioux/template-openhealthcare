@@ -34,7 +34,7 @@ migrations:
 
 test: 
 	# Running test with converage
-	pipenv run coverage run --source=openhcs --branch -m py.test -vv &&\
+	pipenv run coverage run --source=openhcs --branch -m py.test -vv  &&\ 
     pipenv run coverage report -m --fail-under=70 &&\
 	rm -f ./hadolint
 

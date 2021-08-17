@@ -194,3 +194,8 @@ Outputs:
   NodeInstanceRole:
     Description: Cluster Nodes instance role 
     Value: !GetAtt  NodeInstanceRole.Arn
+
+  Endpoint:
+    Value: !GetAtt ControlPlane.Endpoint
+    Export:
+      Name: !Sub '${AWS::StackName}::Endpoint'

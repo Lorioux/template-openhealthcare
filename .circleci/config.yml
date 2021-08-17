@@ -3,6 +3,8 @@ version: 2.1
 orbs:
   aws-eks: circleci/aws-eks@1.1.0
   kubernetes: circleci/kubernetes@0.12.0
+  aws-cli: circleci/aws-cli@2.0.3
+
 
 commands:
   destroy_environ:
@@ -21,26 +23,22 @@ commands:
           name: destroy deployment environment
           when: on_fail
           command: |
-            awsStatus=<parameters.awsConfigStatus>
-            if [ "$awsStatus" == "no"]
+            awsStatus=<<parameters.awsConfigStatus>>
+            if [ "$awsStatus" == "no" ];
               then
                 # TODO: install awscli
                 exit 1;
                 # TODO: configure awscli profile
             fi;
             
-            NETWSTACK= << parameters.clusteNetworkStackName >> 
-            CLUSTSTACK= << parameters.clusterCoreStackName >>
+            NETWSTACK=<< parameters.clusteNetworkStackName >>;
+            CLUSTSTACK=<< parameters.clusterCoreStackName >>;
             STACKNAMES=( "$CLUSTSTACK"  "$NETWSTACK" )
-            if [ "${STACKNAMES}[@]" == "yes" ];
-              then 
-                for name in "${STACKNAMES}[@]" ;
-                do 
-                  if [ -n "$name" ]; then 
-                    aws cloudformation delete-stack --stack-name $name;
-                  fi;  
-                done;
-            else
+            for name in "${STACKNAMES[@]}" ; do 
+              if [ -n "$name" ]; then 
+                aws cloudformation delete-stack --stack-name $name --region "${AWS_DEFAULT_REGION}";
+              fi;  
+            done;         
 
   cache_handle:
     description: helper command to store or retrieve values from MemoStash
@@ -81,6 +79,17 @@ commands:
           command: |
             make migrations
 
+  setup_awscli:
+    steps:
+      - aws-cli/install
+      - run:
+          name: configure aws profile
+          command: |
+            aws configure set aws_secret_access_key ${AWS_SECRET_ACCESS_KEY}
+            aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
+            aws configure set aws_default_region ${AWS_DEFAULT_REGION}
+            aws configure set aws_default_region ${AWS_DEFAULT_REGION}
+
 jobs:
   build_app:
     description: Analyze backend source code
@@ -91,7 +100,6 @@ jobs:
       - run:
           name: create environment to run code analyze
           command: |
-            echo "${CIRCLE_WORKFLOW_ID::8}"
             # require virtural environ 
             make setup
       - run:
@@ -103,12 +111,12 @@ jobs:
           command: |
             # format the source code 
             make lint
-      # - save_cache:
-      #     paths:
-      #       - ".venv"
-      #     key: deps-{{ checksum "Pipfile.lock" }}
+      - save_cache:
+          paths:
+            - ".venv"
+          key: deps-Pipfile.lock
     
-  test_app:
+  coverage_tests:
     docker:
       - image: circleci/python:3.8.4
       - image: circleci/postgres:9.6.16
@@ -124,22 +132,18 @@ jobs:
       FLASK_APP: "openhcs/app.py"
     steps:
       - checkout
-      # - restore_cache:
-      #     keys: 
-      #       - deps-{{ checksum "Pipfile.lock" }}
+      - restore_cache:
+          keys: 
+            - deps-Pipfile.lock
       - run:
           name: Install dependencies
           command: |
             sudo apt update 
             sudo apt-get install -y postgresql-client --fix-missing
-            make install    
+            # make install    
       - run:
-          name: run local database migrartions tests
+          name: run local database migrations tests
           command: |
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE subscribers OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE profiles OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE booking OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "CREATE DATABASE schedules OWNER=${POSTGRES_USERNAME} ENCODING=UTF8;"
             pipenv run flask populate --tables=all; 
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\l"
             psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\dt"
@@ -176,28 +180,30 @@ jobs:
   create_cluster_infrastructure:
     description: provision the cluster infrastructue 
     docker: 
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
+      # - image: amazon/aws-cli
     environment:
-      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID::10}"
+      CLUSTER_IAC_STACK_NAME: ohcs-${CIRCLE_WORKFLOW_ID}
     steps:
       - checkout
+      - setup_awscli
       - run:
           name: create the network infrastructure
           working_directory: ".circleci/deployment/IaC"
           command: |
-            sudo chmod +x ./xbin/cfn-deploy.sh
-            DEPLOY=$( sudo ./xbin/cfn-deploy.sh  "$CLUSTER_IAC_STACK_NAME" clusterIaC.yml "${AWS_DEFAULT_REGION}"  $CLUSTER_IaC)
+            DEPLOY=$( aws cloudformation deploy \
+              --stack-name $CLUSTER_IAC_STACKNAME \
+              --template-file clusterIaC.yml \
+              --region "${AWS_DEFAULT_REGION}" \
+              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+              --parameter-overrides ClusterIaCStackName=$CLUSTER_IAC_STACKNAME --profile default )
             if [ "$DEPLOY" != *"Success"* ];
               then
-                sudo aws cloudformation delete-stack --stack-name $CLUSTER_IaC;
                 exit 1;
-            else
-              curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "$CLUSTER_IAC_STACK_NAME" https://api.memstash.io/values/OHCS_IAC_NAME
-              # curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/OHCS_IAC_NAME
             fi;
       - cache_handle:
           operation: 'PUT'
-          key: "OHCS_IAC_NAME"
+          key: "CLUSTER_IAC_STACKNAME"
           value: ${CLUSTER_IAC_STACK_NAME}
       - destroy_environ:
           awsConfigStatus: "yes"
@@ -207,23 +213,26 @@ jobs:
   create_cluster_core:
     description: create cluster control plane and workload node 
     docker:
-      - image: amazon/aws-cli
+      - image: cimg/base:stable
     environment:
-      CLUSTER_STACK_NAME: "CLUSTER-OHCS-${CIRCLE_WORKFLOW_ID::10}"
+      CLUSTER_STACK_NAME: cluster-ohcs-${CIRCLE_WORKFLOW_ID}
     steps:
       - checkout
-      - aws-eks/install-eksctl
+      - setup_awscli
       - run:
           name: create cluster and managed node groups
           working_directory: ".circleci/deployment/IaC"
           command: |
             # retrieve cluster Infra StackName 
-            STACK_NAME=$(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/OHCS_IAC_NAME )
-            sudo chmod +x ./xbin/cfn-deploy.sh 
-            DEPLOY=$( sudo ./xbin/cfn-deploy.sh  "$CLUSTER_STACK_NAME" clusterCore.yml "${AWS_DEFAULT_REGION}"  $STACK_NAME ) 
+            STACK_NAME=$(curl -H "token: ${MEM_ST_TOKEN}" --request GET https://api.memstash.io/values/CLUSTER_IAC_STACKNAME )
+            DEPLOY=$( aws cloudformation deploy \
+              --stack-name $CLUSTER_STACK_NAME \
+              --template-file clusterIaC.yml \
+              --region ${AWS_DEFAULT_REGION} \
+              --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
+              --parameter-overrides ClusterIaCStackName=$STACK_NAME --profile default )
             if [ "$DEPLOY" != *"Success"* ]; 
               then
-                # aws cloudformation delete-stack --stack-name "$CLUSTER_STACK_NAME";
                 exit 1;
             fi;
       - run:
@@ -231,9 +240,13 @@ jobs:
           command: |
             eksctl utils update-cluster-logging --enable-types=all --approve
       # destroy
+      - cache_handle:
+          operation: 'PUT'
+          key: "CLUSTER_STACK_NAME"
+          value: $CLUSTER_STACK_NAME
       - destroy_environ:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: 'OHCS-${CIRCLE_WORKFLOW_ID::10}'
+          clusteNetworkStackName: ohcs-${CIRCLE_WORKFLOW_ID}
           clusterCoreStackName: ${CLUSTER_STACK_NAME}
 
   configure_cluster_core:
@@ -242,17 +255,18 @@ jobs:
       # replace with your preferred image
       - image: cimg/base:stable
     environment:
-      CLUSTER_STACK_NAME: "CLUSTER-OHCS-${CIRCLE_WORKFLOW_ID::10}"
-      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID::10}"
+      CLUSTER_STACK_NAME: cluster-ohcs-${CIRCLE_WORKFLOW_ID}
+      CLUSTER_IAC_STACK_NAME: ohcs-${CIRCLE_WORKFLOW_ID}
       GREEN_SERVER_PORT: 443
       BLUE_SERVER_PORT: 443
     steps:
       - checkout
+      - setup_awscli
       - kubernetes/install-kubectl:
           kubectl-version: latest  
       - aws-eks/update-kubeconfig-with-authenticator: 
-          aws-region: "${AWS_DEFAULT_REGION}"
-          cluster-name: "${CLUSTER_NAME}"
+          aws-region: ${AWS_DEFAULT_REGION}
+          cluster-name: ${CLUSTER_NAME}
       # pesist the kubeconfig file 
       - persist_to_workspace:
           root: ~/
@@ -263,33 +277,35 @@ jobs:
           command: |
             SVCS=$(kubectl  get serivces -n kube-system -o json)
             # Abort deployment if empty 
-            if [ "$SVCS" = *"kube-system" ]; then 
+            if [ "$SVCS" = *"kube-system"* ]; then 
               echo "Cofigured Successfully";
               ls ~/.kube
             else
               exit 1;
             fi;
       - run:
-          name: create services for app deployment  
+          name: create services for app deployment
+          working_directory: ".circleci/deployment/K8s/xbin"  
           command: |
             # create services
-            cd .circleci/deployment/K8s/xbin
             ./services-init.sh $GREEN_SERVER_PORT;
       - run:
           name: create alb ingresses
+          working_directory: ".circleci/deployment/K8s"
           command: |
-            cd .circleci/deployment/K8s
             kubectl apply -f ../ingresses.yml
             sleep 10s
             kubectl get ig -n default
       - run:
           name: create configmaps and secretes 
+          working_directory: ".circleci/deployment/K8s"
           command: |
-            cd .circleci/deployment/K8s
             # create configmaps
+            chmod +x ./xbin/configs-init.sh
             ./xbin/configs-init.sh .configmaps.yml
 
-            # create secrets 
+            # create secrets
+            chmod +x ./xbin/secrets-init.sh
             ./xbin/secrets-init.sh secrets.yml
 
             kube get secrets -n default
@@ -300,9 +316,6 @@ jobs:
           clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
           clusterCoreStackName: ${CLUSTER_STACK_NAME}
           
-
-    
-
   make_migrations:
     docker:
       - image: circleci/python:3.8.4
@@ -310,39 +323,62 @@ jobs:
       FLASK_APP: "openhcs/app.py"
     steps:
       - checkout
+      - restore_cache:
+          keys: 
+            - deps-Pipfile.lock
       - run:
-          name: migrate databases 
-          command: | 
-            echo "${PSQL_HOSTNAME}"  
-
+          name: prepare the required variables for migrations 
+          command: |
+            cat > ./openhcs/.env \<< EOF 
+            FLASK_APP=openhcs/app.py
+            FLASK_ENV=production
+            PSQL_DB_PROFILES=${PSQL_DB_PROFILES}
+            PSQL_DB_SCHEDULES=${PSQL_DB_SCHEDULES}
+            PSQL_DB_SUBSCRIBERS=${PSQL_DB_SUBSCRIBERS}
+            PSQL_DB_BOOKING=${PSQL_DB_BOOKING}
+            PSQL_HOSTNAME=${PSQL_HOSTNAME}
+            PSQL_PASSWORD=${PSQL_PASSWORD}
+            PSQL_USERNAME=${PSQL_USERNAME}
+            EOF
+            
+      # - run:
+      #     name: install deps
+      #     command: |
+      #       make install
+      - run:
+          name: run migrations
+          command: |
+            # execute flask-migrate
+            make migrations
 
 workflows:
-  CICD_workflow:
+  OpenHeathCare CICD:
     jobs:
       - build_app
-      - test_app:
+      - coverage_tests:
           requires:
             - "build_app"
       - review_codebase:
           type: approval
           requires:
-            - test_app
+            - coverage_tests
+      - make_migrations:
+          context: THEOPENHCS
+          requires:
+            - "coverage_tests"
+            - "review_codebase"
+          filters:
+            branches:
+              only: [main]
       - build_docker_image:
           context: THEOPENHCS
           filters:
             branches:
               only: [main]
           requires:
-            - test_app
-            - review_codebase
-      - make_migrations:
-          context: THEOPENHCS
-          requires:
-            - "test_app"
-          filters:
-            branches:
-              only: [main]
-      - hold:
+            - coverage_tests
+            - make_migrations
+      - review_built_image:
           requires: [build_docker_image]
           type: approval
       
@@ -354,7 +390,7 @@ workflows:
                 command: |
                   echo  "Send notification from here"
           requires:
-            - hold
+            - review_built_image
           filters:
             branches:
               only: [main]

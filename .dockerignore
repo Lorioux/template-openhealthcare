@@ -28,5 +28,6 @@ databases/*.db
 databases/__pycache__
 manage.py
 .dbenv
+.env
 Pipefile
 Pipefile.lock
