@@ -35,7 +35,7 @@ commands:
             CLUSTSTACK=<< parameters.clusterCoreStackName >>;
             STACKNAMES=( "$CLUSTSTACK"  "$NETWSTACK" )
             for name in "${STACKNAMES[@]}" ; do 
-              stack=$(aws cloudformation list-stacks --query "StackSummaries[?(@.StackName=='$name')]"
+              stack=$(aws cloudformation list-stacks --query "StackSummaries[?(@.StackName=='$name')]")
               if [ "$stack" = *"name"* ]; then 
                 aws cloudformation delete-stack --stack-name $name --region "${AWS_DEFAULT_REGION}";
               fi;  
@@ -181,7 +181,8 @@ jobs:
             --template-file clusterIaC.yml --region "${AWS_DEFAULT_REGION}" \
             --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
             --parameter-overrides ClusterIaCStackName=${CLUSTER_IAC_STACK_NAME} --profile default )
-            if [ "$DEPLOY" != *"Success"* ];
+            echo "$DEPLOY" >> .tmp
+            if [ -z $( echo .tmp | egrep "Success" - ) ]; 
               then
                 exit 1;
             fi;
@@ -213,7 +214,8 @@ jobs:
             --template-file clusterIaC.yml --region ${AWS_DEFAULT_REGION} \
             --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
             --parameter-overrides ClusterIaCStackName=$STACK_NAME --profile default )
-            if [ "$DEPLOY" != *"Success"* ]; 
+            echo "$DEPLOY" >> .tmp
+            if [ -z $( echo .tmp | egrep "Success" - ) ]; 
               then
                 exit 1;
             fi;
