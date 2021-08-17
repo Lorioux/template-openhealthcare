@@ -35,7 +35,8 @@ commands:
             CLUSTSTACK=<< parameters.clusterCoreStackName >>;
             STACKNAMES=( "$CLUSTSTACK"  "$NETWSTACK" )
             for name in "${STACKNAMES[@]}" ; do 
-              if [ -n "$name" ]; then 
+              stack=$(aws cloudformation list-stacks --query "StackSummaries[?(@.StackName=='$name')]"
+              if [ "$stack" = *"name"* ]; then 
                 aws cloudformation delete-stack --stack-name $name --region "${AWS_DEFAULT_REGION}";
               fi;  
             done;         
@@ -62,22 +63,6 @@ commands:
               VALUE= << parameters.value >>
               curl -H "Content-Type: text/plain" -H "token: ${MEM_ST_TOKEN}" --request PUT --data "$VALUE" https://api.memstash.io/values/$KEY
             fi;
-  
-  migrate:
-    description: make database migrations
-    parameters:
-      versionChanged:
-        type: boolean
-        default: yes
-    steps:
-      - run:
-          name: install dependencies
-          command: |
-            make install
-      - run:
-          name: migrate databases
-          command: |
-            make migrations
 
   setup_awscli:
     steps:
