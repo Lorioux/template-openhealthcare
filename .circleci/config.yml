@@ -84,7 +84,7 @@ jobs:
       - run:
           name: create environment to run code analyze
           command: |
-            echo "${CIRCLE_WORKFLOW_ID::5}"
+            echo "${CIRCLE_WORKFLOW_ID::8}"
             # require virtural environ 
             make setup
       - run:
@@ -149,19 +149,19 @@ jobs:
     machine: 
       image: ubuntu-2004:202107-02
     environment:
-      OPENHCS_IMAGE_TAG: ${DOCKER_ID}/openhcs:latest
+      OPENHCS_IMAGE_TAG: "${DOCKER_ID}/openhcs:latest"
     steps:
       - checkout
       - run:
           name: login to docker hub
           command: docker login --username ${DOCKER_ID} --password ${DOCKER_PASSWORD}
       - run:
-          name: build the image
+          name: build the openhcs docker image
           command: |
             docker build . -t openhcs:latest
             docker tag openhcs:latest $OPENHCS_IMAGE_TAG
       - run:
-          name: push image
+          name: push openhcs image to docker hub
           command: |
             docker push ${OPENHCS_IMAGE_TAG}
 
@@ -171,7 +171,7 @@ jobs:
     docker: 
       - image: amazon/aws-cli
     environment:
-      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID}"
+      CLUSTER_IAC_STACK_NAME: "OHCS-${CIRCLE_WORKFLOW_ID::8}"
     steps:
       - checkout
       - run:
