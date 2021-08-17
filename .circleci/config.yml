@@ -105,6 +105,7 @@ jobs:
       - run:
           name: install dependencies
           command: |
+            # install deps
             make install
       - run:
           name: run code lints
