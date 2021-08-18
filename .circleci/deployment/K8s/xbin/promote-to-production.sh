@@ -3,6 +3,7 @@
 ## Required args
 export SERVER_PORT=$1                   # web server port nuumber in production
 OPENHCS_IMAGE=$2
+FILE=$3
 export ENVIRONMENT=production;          # must be production
 export DEPLOYMENT_NAME="$ENVIRONMENT-ohcs-dpy"
 
@@ -18,7 +19,7 @@ kubectl get configmap production-svrconfig -n default -o yaml | envsubst | kubec
 # Replace the namespace and contexts, force replace the in production deployments with new one.
 VERSION=$(kubectl get deployments -n default -l environ=staging,tier=backend,context=green -o jsonpath="{.items[0].metadata.labels.version}");
 kubectl set image deployments/$ENVIRONMENT-ohcs-dpy --n default;
-./xbin/deploy-init.sh $ENVIRONMENT $SERVER_PORT $VERSION $OPENHCS_IMAGE ;
+./xbin/deploy-init.sh $ENVIRONMENT $SERVER_PORT $VERSION $OPENHCS_IMAGE $FILE ;
 
 
 # Retrieve deployments in production namespace and retire all with context==blue

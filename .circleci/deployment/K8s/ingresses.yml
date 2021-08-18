@@ -3,12 +3,16 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    kubernetes.io/ingress.class: alb
+    kubernetes.io/ingress.class: ambassador
+    nginx.ingress.kubernetes.io/rewrite-target: /
   name: staging-openhcs
   namespace: default
+  labels:
+    app: openhcs
+    environ: staging
 spec:
   rules:
-  - host: api.openhcs.io
+  - host: api.staging.openhcs.io
     http:
       paths:
       - path: /
@@ -17,18 +21,22 @@ spec:
           service: 
             name: openhcs-green
             port:
-              number: 443
+              number: 80
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
     kubernetes.io/ingress.class: alb
+    nginx.ingress.kubernetes.io/rewrite-target: /
   name: production-openhcs
   namespace: default
+  labels:
+    app: openhcs
+    environ: staging
 spec:
   rules:
-  - host: api.openhcs.io
+  - host: api.production.openhcs.io
     http:
       paths:
       - path: /

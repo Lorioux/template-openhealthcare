@@ -18,7 +18,7 @@ COPY --from=builder /install /usr/local
 RUN apk --no-cache add libpq
 
 
-RUN mkdir /usr/src/openhcs
+RUN mkdir /usr/src/openhcs /usr/src/openhcs/.logs
 WORKDIR /usr/src/openhcs
 
 COPY ./openhcs/ .
