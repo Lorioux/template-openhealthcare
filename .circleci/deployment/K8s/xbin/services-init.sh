@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SVC_CONFIG=$2
+SVC_CONFIG=$2 # services configuration file
 # set the database dns name to externameName
 usage (){
     echo -e "services-init.sh <port-number> <services-config-file>\n"
@@ -17,6 +17,7 @@ elif [[ -z "$2" ]]; then
 else 
     export EXTERNAL_NAME=$PSQL_HOSTNAME
     export SERVER_PORT=$1
-    cat "./$SVC_CONFIG" | envsubst | kubectl replace --force -f - ;
+    cat "$SVC_CONFIG" | envsubst | kubectl apply -f - ;
+    sleep 120s
 fi;
 

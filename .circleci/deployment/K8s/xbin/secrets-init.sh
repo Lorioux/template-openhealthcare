@@ -24,6 +24,6 @@ else
     fi
 fi;
 
-cat ./secrets.yml | envsubst | kubectl apply -f - ;
+cat "$FILE" | envsubst | kubectl apply -f - ;
 
 exit 0;

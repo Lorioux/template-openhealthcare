@@ -1,6 +1,6 @@
 ---
 AWSTemplateFormatVersion: "2010-09-09"
-Description: 'EKS Managed Nodes (SSH access: false) created by Cloudformation'
+Description: 'Managed Nodes (SSH access: false) created by Magido Mascate'
 
 Mappings:
   ServicePrincipalPartitionMap:
@@ -39,6 +39,9 @@ Resources:
       Tags:
         alpha.eksctl.io/nodegroup-name: openhcs-ng
         alpha.eksctl.io/nodegroup-type: managed
+        Key: Name 
+        Value: openhcs-node
+      
   
   NodeInstanceRole:
     Type: 'AWS::IAM::Role'

@@ -26,20 +26,33 @@ commands:
             awsStatus=<<parameters.awsConfigStatus>>
             if [ "$awsStatus" == "no" ];
               then
-                # TODO: install awscli
+                # DO: install awscli
                 exit 1;
             fi;
             
-            NETWSTACK=<< parameters.clusteNetworkStackName >>;
-            CLUSTSTACK=<< parameters.clusterCoreStackName >>;
-            STACKNAMES=( "$CLUSTSTACK"  "$NETWSTACK" )
-            for name in ${STACKNAMES[@]} ; do 
-              stack=$(aws cloudformation list-stacks --query "StackSummaries[?(@.StackName=='$name')]")
-              if  [[ -n $( echo "$stack" | grep -E "$name"  ) ]]; then 
-                echo -e "DELETING STACK: $name\n";
-                aws cloudformation delete-stack --stack-name $name --region "${AWS_DEFAULT_REGION}";
-              fi;  
-            done;         
+            CLUSTER_CORE_STACK=<< parameters.clusterCoreStackName >>;
+            if [[ -z "$CLUSTER_CORE_STACK" ]]; then 
+              aws cloudformation delete-stack --stack-name $CLUSTER_CORE_STACK --region "${AWS_DEFAULT_REGION}" ;   
+            fi;
+      - run:
+          name: delete elbs
+          when: on_fail
+          command: |
+             # get all alb dns name from config maps 
+              export ELBS=($(aws elbv2 describe-load-balancers --output text  --query "LoadBalancerDescriptions[].LoadBalancerName" ) )
+              for elb in ${ELBS[@]}; do 
+                aws elbv2 delete-load-balancer --load-balancer-name $elb --profile default;
+              done; 
+      - run:
+          name: delete VPC and Subnets and remaining stack resources
+          when: on_fail
+          command: |
+            # echo -e "DELETING STACK: $name\n";
+            CLUSTER_NETW_STACK=<< parameters.clusteNetworkStackName >>;
+            if [[ -z "$CLUSTER_NETW_STACK" ]]; then 
+              aws cloudformation delete-stack --stack-name $CLUSTER_NETW_STACK --region "${AWS_DEFAULT_REGION}" ;   
+            fi;
+      
 
   cache_handle:
     description: helper command to store or retrieve values from MemoStash
@@ -74,6 +87,31 @@ commands:
             aws configure set aws_access_key_id ${AWS_ACCESS_KEY_ID}
             aws configure set aws_default_region ${AWS_DEFAULT_REGION}
 
+  install_envsubs:
+    steps:
+      - run:
+          name: update apt and install gettext-base(envSUBST)
+          command: |
+            # sudo apt-get update -y
+            sudo apt install -y gettext-base --fix-missing
+
+  delete_network_infra_stack:
+    steps:
+      - run:
+          name: delete loadbalancers deleting VPC and Subnets
+          command: |
+            # get all alb dns name from config maps 
+            export ELBS=($(aws elbv2 describe-load-balancers --output text  --query "LoadBalancerDescriptions[].LoadBalancerName" ) )
+            for elb in ${ELBS[@]}; do 
+              aws elbv2 delete-load-balancer --load-balancer-name $elb --profile default;
+            done;
+      - run:
+          name: delete VPC and Subnets 
+          command: |
+            # echo -e "DELETING STACK: $name\n";
+            aws cloudformation delete-stack --stack-name $CLUSTER_IAC_STACK_NAME --region "${AWS_DEFAULT_REGION}" ;
+
+
 jobs:
   build_app:
     description: Analyze backend source code
@@ -106,15 +144,11 @@ jobs:
       - image: circleci/python:3.8.4
       - image: circleci/postgres:9.6.16
         environment:
-          POSTGRES_USERNAME: postgres
-          POSRGRES_PASSWORD: password
+          POSTGRES_USERNAME: ${POSTGRES_USERNAME}
+          POSRGRES_PASSWORD: ${POSTGRES_PASSWORD}
           POSTGRES_PORT: 5432
-    # working_directory: ./
     environment:
-      POSTGRES_USERNAME: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_HOSTNAME: localhost
-      FLASK_APP: "openhcs/app.py"
+      POSTGRES_HOSTNAME: localhost   
     steps:
       - checkout
       - restore_cache:
@@ -127,17 +161,48 @@ jobs:
             sudo apt-get install -y postgresql-client --fix-missing
             # make install    
       - run:
-          name: run local database migrations tests
+          name: run local database migrations tests           
           command: |
+            export FLASK_APP=${OPENHCS_APP}
             pipenv run flask populate --tables=all; 
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\l"
-            psql -h ${POSTGRES_HOSTNAME} -U ${POSTGRES_USERNAME} -d postgres -w -c "\dt"
+            psql -h $POSTGRES_HOSTNAME -U $POSTGRES_USERNAME -d postgres -w -c "\l"
+            psql -h $POSTGRES_HOSTNAME -U $POSTGRES_USERNAME -d postgres -w -c "\dt"
             # make migrations
       - run:
           name: run code coverage tests 
           command: |
             # pass IF coverage > 70%
             make test
+
+  
+  make_migrations:
+    docker:
+      - image: circleci/python:3.8.4
+    steps:
+      - checkout
+      - restore_cache:
+          keys: 
+            - deps-Pipfile.lock
+      - run:
+          name: prepare the required variables for migrations 
+          command: |
+            cat > ./openhcs/.env \<< EOF 
+            FLASK_ENV=production
+            PSQL_DB_PROFILES=${PSQL_DB_PROFILES}
+            PSQL_DB_SCHEDULES=${PSQL_DB_SCHEDULES}
+            PSQL_DB_SUBSCRIBERS=${PSQL_DB_SUBSCRIBERS}
+            PSQL_DB_BOOKING=${PSQL_DB_BOOKING}
+            PSQL_HOSTNAME=${PSQL_HOSTNAME}
+            PSQL_PASSWORD=${PSQL_PASSWORD}
+            PSQL_USERNAME=${PSQL_USERNAME}
+            EOF
+            
+      - run:
+          name: run migrations
+          command: |
+            # execute flask-migrate
+            export FLASK_APP=${OPENHCS_APP}
+            make migrations
 
   build_docker_image:
     description: build the docker image from code
@@ -195,9 +260,6 @@ jobs:
     description: create cluster control plane and workload node 
     docker:
       - image: cimg/base:stable
-    environment:
-      CLUSTER_STACK_NAME: openhcs-cls-core
-      CLUSTER_NAME: openhcs
     steps:
       - checkout
       - setup_awscli
@@ -210,7 +272,7 @@ jobs:
             aws cloudformation deploy --stack-name ${CLUSTER_STACK_NAME} \
             --template-file clusterCore.yml --region ${AWS_DEFAULT_REGION} \
             --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
-            --parameter-overrides ClusterIaCStackName="openhcs-iacode" --profile default 
+            --parameter-overrides ClusterIaCStackName="${CLUSTER_IAC_STACK_NAME}" --profile default 
             
       - run:
           name: enable cluster logging types 
@@ -222,19 +284,16 @@ jobs:
       #     value: $CLUSTER_STACK_NAME
       - destroy_environ:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: openhcs-iacode
-          clusterCoreStackName: openhcs-cluster
+          clusteNetworkStackName: $CLUSTER_IAC_STACK_NAME
+          clusterCoreStackName: $CLUSTER_STACK_NAME
 
   configure_cluster_core:
     description: configure cluster kubernetes 
     docker:
-      # replace with your preferred image
-      - image: cimg/base:stable
+      - image: circleci/python:3.8.4
     environment:
-      CLUSTER_NAME: openhcs
-      CLUSTER_STACK_NAME: openhcs-cls-core
-      CLUSTER_IAC_STACK_NAME: openhcs-iacode
-      GREEN_SERVER_PORT: 443
+      GREEN_SERVER_PORT: 80
+      # To remove
     steps:
       - checkout
       - setup_awscli
@@ -244,58 +303,68 @@ jobs:
       - aws-eks/update-kubeconfig-with-authenticator: 
           aws-region: ${AWS_DEFAULT_REGION}
           cluster-name: ${CLUSTER_NAME}
+      - install_envsubs
       - run:
           name: test kubernetes config file 
           command: |
             SVCS=$(kubectl  get services -n kube-system -o json )
+            
             # Abort deployment if empty 
-            if [ "$SVCS" = *"kube-system"* ]; then 
+            if [[ -n $( echo "$SVCS" | grep "kube-system" ) ]]; then 
               echo "Cofigured Successfully";
               ls ~/.kube
             else
+              echo "$SVCS"
               exit 1;
             fi;
       - run:
           name: create services for app deployment
-          working_directory: ".circleci/deployment/K8s/xbin"  
+          working_directory: ".circleci/deployment/K8s"  
           command: |
             # create services
-            ./services-init.sh $GREEN_SERVER_PORT;
+            chmod +x ./xbin/services-init.sh
+            ./xbin/services-init.sh $GREEN_SERVER_PORT ./services.yml;
+
+            # kubectl wait --for=condition=available --timeout=120s services -n default -l 'environ in (production, staging)' ;
+      # - run:
+      #     name: create alb ingresses
+      #     working_directory: ".circleci/deployment/K8s"
+      #     command: |
+      #       kubectl apply -f ingresses.yml
+      #       sleep 10s
+      #       kubectl describe ingresses -n default
       - run:
-          name: create alb ingresses
+          name: create secretes 
           working_directory: ".circleci/deployment/K8s"
-          command: |
-            kubectl apply -f ../ingresses.yml
-            sleep 10s
-            kubectl get ig -n default
+          command: |          
+            # create secrets
+            chmod +x ./xbin/secrets-init.sh
+            ./xbin/secrets-init.sh ./secrets.yml
+
+            kubectl get secrets -n default
+      # persist the kubeconfig file
       - run:
-          name: create configmaps and secretes 
+          name: create config maps 
           working_directory: ".circleci/deployment/K8s"
           command: |
             # create configmaps
             chmod +x ./xbin/configs-init.sh
-            ./xbin/configs-init.sh .configmaps.yml
-            # create secrets
-            chmod +x ./xbin/secrets-init.sh
-            ./xbin/secrets-init.sh secrets.yml
+            ./xbin/configs-init.sh ./configmaps.yml
 
-            kube get secrets -n default
-      # persist the kubeconfig file 
       - persist_to_workspace:
           root: ~/
           paths:
             - ".kube"
       - destroy_environ:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
-          clusterCoreStackName: ${CLUSTER_STACK_NAME}
+          clusteNetworkStackName: $CLUSTER_IAC_STACK_NAME
+          clusterCoreStackName: $CLUSTER_STACK_NAME
     
-  make_k8s_deployments:
+  deploy_staging_green_k8s:
     description: >- 
-      Deploy API server kubernetes in staging environment, and green context (IF three is None already running). 
-      Then, transition to  production blue context (IF pass smoke test), within the default namespace.
+      Deploy API server kubernetes in staging environment at green context.
     docker:
-      - image: cimg/base:stable
+      - image: circleci/python:3.8.4
     environment:
       ENVIRON: staging     # environ for the deployment
       SERVER_PORT: 80      # web server port number
@@ -306,89 +375,144 @@ jobs:
           at: ~/
       - kubernetes/install-kubectl:
           kubectl-version: latest 
+      - install_envsubs
+      - setup_awscli
+      # - aws-eks/install-eksctl
+      # - run:
+      #     name: create kubeconfig
+      #     command: |
+      #       eksctl utils write-kubeconfig --cluster $CLUSTER_NAME --region $AWS_DEFAULT_REGION
       - run:
-          name: make deployment
+          name: make staging deployment
           working_directory: ".circleci/deployment/K8s"
           command: |
             OPENHCS_IMAGE="${DOCKER_ID}/openhcs:latest"   # docker image
             chmod +x xbin/deploy-init.sh
             # execute the deployment of app in the staging environment
-            xbin/deploy-init.sh $ENVIRON $SERVER_PORT $VERSION $OPENHCS_IMAGE
-            DPYS=$(kubectl get deployments -n default -l tier=backend,environ='$ENVIRON',context=green -o jsonpath="{.items[*]}")
-            watch -p -n 3 $DPY
+            ./xbin/deploy-init.sh $ENVIRON $SERVER_PORT $VERSION $OPENHCS_IMAGE "./deployments.yml"
+            
+            kubectl get deployments -n default -l tier=backend,environ=$ENVIRON,context=green;            
       - run: 
-          name: test deployed app running as expected
+          name: make smoke test on staging green deployment 
           working_directory: ".circleci/deployment/K8s"
           command: |
-            # get the url for staging app
-            URL=http://$(kubernetes get services -n default -l environ='$ENVIRON',app='openhcs-green' -o jsonpath="{.items[0].status.loadbalancer.ingress[0].ip}"):"${SERVER_PORT}"
-            
-            # make request using the url
-            REPONSE=$(curl $URL )
-            
-            # check if status if ok in the returned response 
-            if [[ "$RESPONSE" = *"ok"* ]]; then 
-              # Promote to production
-              chmod +x xbin/promote-to-production.sh 
-              xbin/promote-to-production $SERVER_PORT $OPENHCS_IMAGE "./deployments.yml"
-              wath -p -n 3 -x kubectl get deploymens/openhcs-blue;
-            fi;
-            
-      - run:
-          name: check in production status 
-          command: |
-            # get the url for staging app
-            URL=http://$(kubernetes get services -n default -l environ='$ENVIRON',app='openhcs-green' -o jsonpath="{.items[0].status.loadbalancer.ingress[0].ip}"):"${SERVER_PORT}"
-                      
-            # make request using the url
-            REPONSE=$(curl $URL )
-            STAGING=$(kubectl get deployments -l environ='staging',context='green' -o jsonpath="{.items[0].metadata.labels.name}" 
-            # test in production app status is ok
-            if [[ "$RESPONSE" = *"ok"* ]]; then 
-              # eliminate the in staging deployment
-              kubectl delete deployment $STAGING --namespace default
-              wath -p -n 3 -x kubectl get deploymens;
-            else
-              # eliminate in production app if status is NOT ok, and exit with failure
-            fi; 
+            # get the url of staging green app
+            kubectl wait --for=condition=Ready=true --timeout=120s pods -l environ="staging",app="openhcs"
+            export HOSTNAME=$(kubectl get configmaps -n default -l environ=staging,app=openhcs -o jsonpath="{.items[].data.SERVER_HOSTNAME}")
+             
+            URL="http://${HOSTNAME}:$SERVER_PORT"
+
+            echo "$URL"
           
-          
-  make_migrations:
+            until [ -z $( curl -sS "$URL" | grep "ok" ) ]; do
+              echo "No response"
+              sleep 3s
+            done;
+
+            echo -e "Staging accessible from: $URL";
+
+
+      - destroy_environ:
+            awsConfigStatus: "yes"
+            clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
+            clusterCoreStackName: ${CLUSTER_STACK_NAME}
+     
+  deploy_production_blue_k8s:
+    description: >-
+      Depeloy in production production blue context (IF pass smoke test) and make smoke tests.
     docker:
       - image: circleci/python:3.8.4
     environment:
-      FLASK_APP: "openhcs/app.py"
+      SERVER_PORT: 443
+      ENVIRON: production
     steps:
       - checkout
-      - restore_cache:
-          keys: 
-            - deps-Pipfile.lock
+      - attach_workspace:
+          at: ~/
+      - kubernetes/install-kubectl:
+          kubectl-version: latest 
+      - install_envsubs
+      - setup_awscli
+      # - aws-eks/install-eksctl
+      # - run:
+      #     name: create kubeconfig
+      #     command: |
+      #       eksctl utils write-kubeconfig --cluster $CLUSTER_NAME --region $AWS_DEFAULT_REGION
       - run:
-          name: prepare the required variables for migrations 
+          name: deploy the app
+          working_directory: ".circleci/deployment/K8s"
           command: |
-            cat > ./openhcs/.env \<< EOF 
-            FLASK_APP=openhcs/app.py
-            FLASK_ENV=production
-            PSQL_DB_PROFILES=${PSQL_DB_PROFILES}
-            PSQL_DB_SCHEDULES=${PSQL_DB_SCHEDULES}
-            PSQL_DB_SUBSCRIBERS=${PSQL_DB_SUBSCRIBERS}
-            PSQL_DB_BOOKING=${PSQL_DB_BOOKING}
-            PSQL_HOSTNAME=${PSQL_HOSTNAME}
-            PSQL_PASSWORD=${PSQL_PASSWORD}
-            PSQL_USERNAME=${PSQL_USERNAME}
-            EOF
-            
-      - run:
-          name: run migrations
-          command: |
-            # execute flask-migrate
-            make migrations
+            OPENHCS_IMAGE="${DOCKER_ID}/openhcs:latest"   # docker image
 
+            # retrieve the staging deployment version
+            VERSION=$( kubectl  get deployments -n default -l environ='staging',tier=backend,context=green -o jsonpath="{.items[0].metadata.labels.version}");
+            
+            chmod +x ./xbin/deploy-init.sh
+            ./xbin/deploy-init.sh $ENVIRON $SERVER_PORT $VERSION $OPENHCS_IMAGE "./deployments.yml" ;
+            
+            kubectl get deployments -n default;
+
+      - run:
+          name: meke in production smoke tests 
+          command: |
+            # get the url of in production blue app
+            kubectl wait --for=condition=Ready=true --timeout=120s pods -l environ="production",app="openhcs";
+            export HOSTNAME=$(kubectl get configmaps -n default -l environ=production,app=openhcs -o jsonpath="{.items[].data.SERVER_HOSTNAME}")
+            
+            URL="http://${HOSTNAME}:$SERVER_PORT"        
+
+            STAGING=$(kubectl get deployments -l environ='staging',context='green' -o jsonpath="{.items[0].metadata.labels.name}")
+
+            echo "$URL"
+
+            # check in production app status is ok
+            until [ -z $( curl -sS "$URL" | grep "ok" ) ]; do
+              echo "No response"
+              sleep 3s
+            done;
+
+            if [[ $? == 0  ]]; then 
+              echo -e "Production accessible from: $URL";
+            else
+              # eliminate in production app if status is NOT ok, and exit with failure
+              kubectl delete deployments/${PRO_OPENHCS_DPY} -n default;
+              exit 1
+            fi;
+      - destroy_environ:
+          awsConfigStatus: "yes"
+          clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
+          clusterCoreStackName: ${CLUSTER_STACK_NAME}
+
+  clean_up_deployment_stacks:
+    docker:
+      - image: circleci/python:3.8.4
+    steps:
+      - checkout
+      - setup_awscli
+      - attach_workspace:
+          at: ~/
+      - kubernetes/install-kubectl:
+          kubectl-version: latest
+      - run:
+          name: Eliminate staging deploymemt
+          command: |
+            # eliminate the in staging deployment
+              kubectl delete deployments/${STAG_OPENHCS_DPY} --namespace default
+              kubectl wait --for=delete --timeout=60s pods -l environ="staging",app="openhcs";
+              kubectl get deployments;
+      - run:
+          name: cleanup testing envirion 
+          command: |
+            aws cloudformation delete-stack --stack-name ${CLUSTER_STACK_NAME} --region "${AWS_DEFAULT_REGION}";
+      - delete_network_infra_stack 
+          
+ 
 workflows:
   OpenHeathCare CICD:
     jobs:
       - build_app
       - coverage_tests:
+          context: THEOPENHCS
           requires:
             - "build_app"
       - review_codebase:
@@ -399,7 +523,7 @@ workflows:
           context: THEOPENHCS
           requires:
             - "coverage_tests"
-            # - "review_codebase"
+            - "review_codebase"
           filters:
             branches:
               only: [main]
@@ -423,7 +547,7 @@ workflows:
                 command: |
                   echo  "Send notification from here"
           requires:
-            # - review_built_image
+            - review_built_image
             - build_docker_image
           filters:
             branches:
@@ -446,7 +570,25 @@ workflows:
                 name: Notify administrator
                 command: |
                   echo "Send notification from here"
-      - make_k8s_deployments:
+      - deploy_staging_green_k8s:
           context: THEOPENHCS
           requires:
             - "configure_cluster_core"
+
+      - deploy_production_blue_k8s:
+          context: THEOPENHCS
+          requires:
+            - "deploy_staging_green_k8s"
+      
+      - hold:
+          type: approval
+          requires:
+            - "deploy_production_blue_k8s"
+      - clean_up_deployment_stacks:
+          context: THEOPENHCS
+          requires:
+            - "hold"
+          pre-steps:
+            - run:
+                name: notify_product_engineer
+                command: echo "Deployment complete"

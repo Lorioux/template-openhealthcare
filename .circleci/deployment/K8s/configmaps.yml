@@ -19,8 +19,9 @@ metadata:
   namespace: default
   labels:
     environ: staging
+    app: openhcs
 data:
-  SERVER_HOSTNAME: "${SERVER_HOSTNAME_STAG}"
+  SERVER_HOSTNAME: ${SERVER_HOSTNAME_STAG}
 ---
 kind: ConfigMap
 apiVersion: v1
@@ -29,5 +30,6 @@ metadata:
   namespace: default
   labels:
     environ: production
+    app: openhcs
 data:
-  SERVER_HOSTNAME: "${SERVER_HOSTNAME_PRO}"
+  SERVER_HOSTNAME: ${SERVER_HOSTNAME_PRO}

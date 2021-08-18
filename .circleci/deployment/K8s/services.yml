@@ -42,9 +42,9 @@ metadata:
     environ: production 
     tier: backend
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
-  - port: 80
+  - port: 443
   selector:
     app: openhcs
     environ: production
