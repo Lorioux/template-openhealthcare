@@ -4,7 +4,9 @@ import os
 from pathlib import Path
 import logging
 from flasgger import Swagger
-from flask import Flask, jsonify, json, current_app
+from flask import Flask
+from flask import jsonify
+from flask  import json
 from openhcs import initialize_dbase, dbase, settings
 from openhcs.registration.microservice import profiles
 from openhcs.booking.microservice import bookings
@@ -99,9 +101,10 @@ def make_app(environment=None):
     def index():
         environment=os.getenv("DEPLOYMENT_ENVIRONMENT", '')
         domain_name=os.getenv("FLASK_RUN_HOST", '')
+        version = os.getenv("VERSION", 1)
         return jsonify({
             "status": "ok", 
-            "apiversion": "1.0.0", 
+            "apiversion": version, 
             "summaries": {
                 "apiName": "The open heathcare services",
                 "environment":  environment,

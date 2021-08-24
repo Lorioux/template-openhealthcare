@@ -6,23 +6,23 @@ The core concepts of the microservices archetecture are practitioners, beneficia
 
 The simplest microservices to be implemented through the API are categorized based on the stakeholders' core needs:
 
-| Operations                   | Practitioner(doctor) | Care Giver | Beneficiary (patient) | Donor | Administrator |
-| ---------------------------- | :------------------: | :--------: | :-------------------: | :---: | :-----------: |
-| Find practitioners           |                     |     *     |           *           |       |               |
-| Make appointment             |                     |     *     |           *           |       |               |
-| Create profile               |          *          |     *     |           *           |       |       *       |
-| Place availability schedules |          *          |           |                       |       |               |
-| Share medical knowledge      |          *          |           |                       |       |               |
-| Search medical knowledge     |                     |     *     |           *           |       |               |
-| Produce health report        |          *          |           |                       |       |               |
-| Send notifications           |          *          |           |                       |       |       *       |
-| Make donations               |                     |           |                       |   *   |               |
-| Elaborate treatment plans    |          *          |           |                       |       |               |
-| etc.                         |                     |           |                       |       |               |
+| Operations                   | Practitioner(doctor) | Care Giver | Beneficiary (patient) | Donor | Administrator | etc. |
+| ---------------------------- | :------------------: | :--------: | :-------------------: | :---: | :-----------: | ---- |
+| Find practitioners           |                     |     *     |           *           |       |               |      |
+| Make appointment             |                     |     *     |           *           |       |               |      |
+| Create profile               |          *          |     *     |           *           |       |       *       |      |
+| Place availability schedules |          *          |           |                       |       |               |      |
+| Share medical knowledge      |          *          |           |                       |       |               |      |
+| Search medical knowledge     |                     |     *     |           *           |       |               |      |
+| Produce health report        |          *          |           |                       |       |               |      |
+| Send notifications           |          *          |           |                       |       |       *       |      |
+| Make donations               |                     |           |                       |   *   |               |      |
+| Elaborate treatment plans    |          *          |           |                       |       |               |      |
+| etc.                         |                     |           |                       |       |               |      |
 
 Find details on operations, entities, objects and API paths designed to conform with [OpenAPI Specification](https://swagger.io/specification/) **`3.0.1`** in this [folder](./openhcs/swagger) (`swagger`).  Also, the API is distributed through [Docker Container Image](https://hub.docker.com/repository/docker/devopsxpro/ohcs) available in a public docker repository.
 
-### Requirements
+### Prerequisites
 
 The API is developed with Flask micro-framework and related third-party libraries. We use `waitress` library to run in production server and `flasgger` to provide the Swagger User Interface based of the API documentation as per OpenAPI 3.0.x Specification. The continuous integration process (e.g. build, test, analysis) is executed through third-party packages such as: `pytest`, `coverage` , `pylint`,  `flask-migrate` and more found the `requirements.txt` file.
 
@@ -39,6 +39,9 @@ The infrastructure for deployment is provisioned through `AWS CloudFormation` Pl
 * EC2 - Elastic Cloud Computer (EC2)
 * NAT - Network Address Translator
 * RT - Route tables
+* IAM Roles
+* IAM Policies
+* CloudWatch
 * Route Rule
 * Internet Gateways
 * Elastic IP
@@ -53,16 +56,24 @@ The continuous delivery pipeline is handled through CircleCI, and parallet actio
 
 It start with build (e.g.` code lint`, `dockerfile lint` ) step for every push event on the repository `main ` branch or related branches. It proceeds with `coverage tests` on code and `datatabases` migrations. The `code analysis` step aim at scanning the code and implemented libraries for security vulnerabilities ( but not impletend yet, the workflow). Code built and passing the tests and analysis steps is reviewed to proceed with the `code merge` (if a pull request is received). The operation are executed as per the `Makefile` in this repository.
 
+###### CI Utilities and Configuration files
+
+* `Makefile` - for virtual environment setup and all - dependencies installation, lint, test, migrations operation
+* `.pylintrc` - python lint INI configurations for `pylint` library
+* `.coveragerc `-  caverage tests INI configurations for `coverage and pytest libraries.`
+
+
 #### Continous Deployment Process (CD)
 
 While the docker image is built and pushed to Docker hub repository and successfully tested by the product engineer (offline), an approval is emitted to proceed with CD steps. Starting from cluster infrastruture provision (IaC), followed by kubernetes deployments - first with `staging as green deployment`. When the deployed apps in `stagging envirornment` pass `smoke test` , then in `prodution blue` app is deployed (i.e. Promoted ). Also, with the app deployed in production environment (in blue) we perform `smoke tests`, then the staging app is deleted when the smoke tests succeed. Hence, we didn't implement the monitory step yet.
 
-##### CI/CD Pipeline Authentication Requirements
+###### CI/CD Pipeline Authentication Requirements
 
 * Docker Hub Id and Password
 * AWS Access Key Id and Secret Access Key
+* AWS RDS Database Instance Credentials
 
-##### Deployment Utilities and Templates
+###### CD Utilities and Templates
 
 * [deployments scripts](./.circleci/deployment/K8s) ( `deploy-init.sh`) - helper to make kubernetes deployments
 * [services scripts](./.circleci/deployment/K8s) ( `services-init.sh` ) - helper to create the kubernetes services

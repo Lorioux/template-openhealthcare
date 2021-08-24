@@ -27,6 +27,7 @@ spec:
         environ: "${ENVIRONMENT}"
         tier: backend
         context: "${CONTEXT}"
+        version: "${VERSION}"
     spec:
       containers:
       - name:  openhcs
@@ -49,6 +50,8 @@ spec:
           failureThreshold: 3
           periodSeconds: 10
         env:
+        - name: VERSION
+          value: ${VERSION}
         - name: DEPLOYMENT_ENVIRONMENT
           value: "${ENVIRONMENT} : ${CONTEXT}"
         - name: FLASK_RUN_HOST

@@ -28,8 +28,8 @@ Resources:
       NodeRole: !GetAtt NodeInstanceRole.Arn
       NodegroupName: "openhcs-ng"
       ScalingConfig:
-        DesiredSize: 2
-        MaxSize: 2
+        DesiredSize: 1
+        MaxSize: 1
         MinSize: 1
       Subnets: 
         - Fn::ImportValue: 
@@ -40,7 +40,7 @@ Resources:
         alpha.eksctl.io/nodegroup-name: openhcs-ng
         alpha.eksctl.io/nodegroup-type: managed
         Key: Name 
-        Value: openhcs-node
+        Value: TheOpenHCS-SingleNode
       
   
   NodeInstanceRole:
