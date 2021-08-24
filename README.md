@@ -68,6 +68,10 @@ While the docker image is built and pushed to Docker hub repository and successf
 * [services scripts](./.circleci/deployment/K8s) ( `services-init.sh` ) - helper to create the kubernetes services
 * [secrets scripts](./.circleci/deployment/K8s) ( `secrets-init.sh` ) - helper to create the kubernetes secrets
 * [configmaps scripts](./.circleci/deployment/K8s) ( `configs-init.sh` ) helper to create kubernetes config maps
+* [stacks deleting scripts](./.circleci/deployment/IaC):
+  * `delete-alb-instances.sh` -  helper to delete loadbalancers
+  * `delete-cluster-nodes.sh` - helper to delete the workload nodes
+  * `delete-network-resources.sh `- helper to delete the cluster communication network stack resources
 * Templates - found in `.circleci/deployment ` directory:
   * For AWS cloudformation (folder `./IaC`):
 

@@ -7,53 +7,48 @@ orbs:
 
 
 commands:
-  destroy_environ:
-    description: destroy deployment ennvironment
+  delete_cluster_core_and_nodes:
+    description: destroy cluster workload nodes and loadbalancers
     parameters:
       awsConfigStatus:
         type: enum
         default: "yes"
         enum: ["yes", "no"]
-      clusteNetworkStackName: 
-        type: string 
-      clusterCoreStackName:
-        type: string 
     steps:
       - run:
-          name: destroy deployment environment
+          name: delete cluster nodes
           when: on_fail
+          working_directory: ".circleci/deployment/IaC"
           command: |
             awsStatus=<<parameters.awsConfigStatus>>
-            if [ "$awsStatus" == "no" ];
-              then
-                # DO: install awscli
-                exit 1;
-            fi;
-            
-            CLUSTER_CORE_STACK=<< parameters.clusterCoreStackName >>;
-            if [[ -z "$CLUSTER_CORE_STACK" ]]; then 
-              aws cloudformation delete-stack --stack-name $CLUSTER_CORE_STACK --region "${AWS_DEFAULT_REGION}" ;   
-            fi;
-      - run:
-          name: delete elbs
-          when: on_fail
-          command: |
-             # get all alb dns name from config maps 
-              export ELBS=($(aws elbv2 describe-load-balancers --output text  --query "LoadBalancerDescriptions[].LoadBalancerName" ) )
-              for elb in ${ELBS[@]}; do 
-                aws elbv2 delete-load-balancer --load-balancer-name $elb --profile default;
-              done; 
-      - run:
-          name: delete VPC and Subnets and remaining stack resources
-          when: on_fail
-          command: |
-            # echo -e "DELETING STACK: $name\n";
-            CLUSTER_NETW_STACK=<< parameters.clusteNetworkStackName >>;
-            if [[ -z "$CLUSTER_NETW_STACK" ]]; then 
-              aws cloudformation delete-stack --stack-name $CLUSTER_NETW_STACK --region "${AWS_DEFAULT_REGION}" ;   
-            fi;
-      
+            if [ "$awsStatus" == "no" ]; then echo "Configure AWS CLI"; exit 1; fi;
 
+            chmod +x .xbin/delete-cluster-nodes.sh
+            .xbin/delete-cluster-nodes.sh
+      - run:
+          name: delete cluster elbs
+          when: on_fail
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            chmod +x .xbin/delete-alb-instances.sh
+            .xbin/delete-alb-instances.sh
+      
+      - run:
+          name: delete network resources except VPC
+          when: on_fail
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            chmod +x .xbin/delete-network-resources.sh
+            .xbin/delete-network-resources.sh "exclude-vpc"
+
+      - run:
+          name: delete vpc and associated security groups
+          when: on_fail
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            chmod +x .xbin/delete-network-resources.sh
+            .xbin/delete-network-resources.sh "include-vpc"
+            
   cache_handle:
     description: helper command to store or retrieve values from MemoStash
     parameters:
@@ -94,22 +89,6 @@ commands:
           command: |
             # sudo apt-get update -y
             sudo apt install -y gettext-base --fix-missing
-
-  delete_network_infra_stack:
-    steps:
-      - run:
-          name: delete loadbalancers deleting VPC and Subnets
-          command: |
-            # get all alb dns name from config maps 
-            export ELBS=($(aws elbv2 describe-load-balancers --output text  --query "LoadBalancerDescriptions[].LoadBalancerName" ) )
-            for elb in ${ELBS[@]}; do 
-              aws elbv2 delete-load-balancer --load-balancer-name $elb --profile default;
-            done;
-      - run:
-          name: delete VPC and Subnets 
-          command: |
-            # echo -e "DELETING STACK: $name\n";
-            aws cloudformation delete-stack --stack-name $CLUSTER_IAC_STACK_NAME --region "${AWS_DEFAULT_REGION}" ;
 
 
 jobs:
@@ -184,7 +163,7 @@ jobs:
           keys: 
             - deps-Pipfile.lock
       - run:
-          name: prepare the required variables for migrations 
+          name: prepare environment variables for migrations 
           command: |
             cat > ./openhcs/.env \<< EOF 
             FLASK_ENV=production
@@ -247,14 +226,8 @@ jobs:
             --capabilities "CAPABILITY_IAM" "CAPABILITY_NAMED_IAM" \
             --profile default 
             
-      # - cache_handle:
-      #     operation: 'PUT'
-      #     key: "CLUSTER_IAC_STACKNAME"
-      #     value: ${CLUSTER_IAC_STACK_NAME}
-      - destroy_environ:
-          awsConfigStatus: "yes"
-          clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
-          clusterCoreStackName: ''  
+      # - delete_cluster_core_and_nodes:
+      #     awsConfigStatus: "yes"  
 
   create_cluster_core:
     description: create cluster control plane and workload node 
@@ -278,14 +251,8 @@ jobs:
           name: enable cluster logging types 
           command: |
             eksctl utils update-cluster-logging --cluster $CLUSTER_NAME  --enable-types=all --approve
-      # - cache_handle:
-      #     operation: 'PUT'
-      #     key: "CLUSTER_STACK_NAME"
-      #     value: $CLUSTER_STACK_NAME
-      - destroy_environ:
+      - delete_cluster_core_and_nodes:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: $CLUSTER_IAC_STACK_NAME
-          clusterCoreStackName: $CLUSTER_STACK_NAME
 
   configure_cluster_core:
     description: configure cluster kubernetes 
@@ -355,10 +322,9 @@ jobs:
           root: ~/
           paths:
             - ".kube"
-      - destroy_environ:
+      - delete_cluster_core_and_nodes:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: $CLUSTER_IAC_STACK_NAME
-          clusterCoreStackName: $CLUSTER_STACK_NAME
+
     
   deploy_staging_green_k8s:
     description: >- 
@@ -404,18 +370,16 @@ jobs:
 
             echo "$URL"
           
-            until [ -z $( curl -sS "$URL" | grep "ok" ) ]; do
+            until [[ -n $( curl -sS "$URL" | grep "ok" ) ]]; do
               echo "No response"
-              sleep 3s
+              sleep 5s
             done;
 
-            echo -e "Staging accessible from: $URL";
+            echo -e "Staging environment accessible from: $URL";
 
-
-      - destroy_environ:
+      - delete_cluster_core_and_nodes:
             awsConfigStatus: "yes"
-            clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
-            clusterCoreStackName: ${CLUSTER_STACK_NAME}
+
      
   deploy_production_blue_k8s:
     description: >-
@@ -453,8 +417,9 @@ jobs:
             kubectl get deployments -n default;
 
       - run:
-          name: meke in production smoke tests 
+          name: make in production smoke tests 
           command: |
+
             # get the url of in production blue app
             kubectl wait --for=condition=Ready=true --timeout=120s pods -l environ="production",app="openhcs";
             export HOSTNAME=$(kubectl get configmaps -n default -l environ=production,app=openhcs -o jsonpath="{.items[].data.SERVER_HOSTNAME}")
@@ -466,22 +431,20 @@ jobs:
             echo "$URL"
 
             # check in production app status is ok
-            until [ -z $( curl -sS "$URL" | grep "ok" ) ]; do
+            until [[ -n $( curl -sS "$URL" | grep "ok" ) ]]; do
               echo "No response"
-              sleep 3s
+              sleep 5s
             done;
 
             if [[ $? == 0  ]]; then 
-              echo -e "Production accessible from: $URL";
+              echo -e "Production environment accessible from: $URL";
             else
               # eliminate in production app if status is NOT ok, and exit with failure
               kubectl delete deployments/${PRO_OPENHCS_DPY} -n default;
               exit 1
             fi;
-      - destroy_environ:
+      - delete_cluster_core_and_nodes:
           awsConfigStatus: "yes"
-          clusteNetworkStackName: ${CLUSTER_IAC_STACK_NAME} 
-          clusterCoreStackName: ${CLUSTER_STACK_NAME}
 
   clean_up_deployment_stacks:
     docker:
@@ -501,10 +464,31 @@ jobs:
               kubectl wait --for=delete --timeout=60s pods -l environ="staging",app="openhcs";
               kubectl get deployments;
       - run:
-          name: cleanup testing envirion 
+          name: delete cluster nodes
+          working_directory: ".circleci/deployment/IaC"
           command: |
-            aws cloudformation delete-stack --stack-name ${CLUSTER_STACK_NAME} --region "${AWS_DEFAULT_REGION}";
-      - delete_network_infra_stack 
+            chmod +x .xbin/delete-cluster-nodes.sh
+            .xbin/delete-cluster-nodes.sh
+      - run:
+          name: delete cluster elbs
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            chmod +x .xbin/delete-alb-instances.sh
+            .xbin/delete-alb-instances.sh
+      
+      - run:
+          name: delete network resources except VPC
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            chmod +x .xbin/delete-network-resources.sh
+            .xbin/delete-network-resources.sh "exclude-vpc"
+
+      - run:
+          name: delete vpc and associated security groups
+          working_directory: ".circleci/deployment/IaC"
+          command: |
+            chmod +x .xbin/delete-network-resources.sh
+            .xbin/delete-network-resources.sh "include-vpc"
           
  
 workflows:
