@@ -23,10 +23,12 @@ The simplest microservices to be implemented through the API are categorized bas
 Find details on operations, entities, objects and API paths designed to conform with [OpenAPI Specification](https://swagger.io/specification/) **`3.0.1`** in this [folder](./openhcs/swagger) (`swagger`).  Also, the API is distributed through [Docker Container Image](https://hub.docker.com/repository/docker/devopsxpro/ohcs) available in a public docker repository.
 
 ### Prerequisites
+----
 
 The API is developed with Flask micro-framework and related third-party libraries. We use `waitress` library to run in production server and `flasgger` to provide the Swagger User Interface based of the API documentation as per OpenAPI 3.0.x Specification. The continuous integration process (e.g. build, test, analysis) is executed through third-party packages such as: `pytest`, `coverage` , `pylint`,  `flask-migrate` and more found the `requirements.txt` file.
 
 #### Infrastracture Requirements
+----
 
 The infrastructure for deployment is provisioned through `AWS CloudFormation` Plastform as Service. Here we create the following resources in the context of `Infrastructure as Code`:
 
@@ -47,12 +49,14 @@ The infrastructure for deployment is provisioned through `AWS CloudFormation` Pl
 * Elastic IP
 
 ### The Continuous Delivery Pipeline
+----
 
 The continuous delivery pipeline is handled through CircleCI, and parallet actions are handled through Github Workflow Actions as found in the configuration folders `.circleci` and `.github` respectively.
 
 <img src="./attatchments/cicd.png" width="100%" />
 
 #### Continuous Integration Process (CI)
+----
 
 It start with build (e.g.` code lint`, `dockerfile lint` ) step for every push event on the repository `main ` branch or related branches. It proceeds with `coverage tests` on code and `datatabases` migrations. The `code analysis` step aim at scanning the code and implemented libraries for security vulnerabilities ( but not impletend yet, the workflow). Code built and passing the tests and analysis steps is reviewed to proceed with the `code merge` (if a pull request is received). The operation are executed as per the `Makefile` in this repository.
 
@@ -64,6 +68,7 @@ It start with build (e.g.` code lint`, `dockerfile lint` ) step for every push e
 
 
 #### Continous Deployment Process (CD)
+----
 
 While the docker image is built and pushed to Docker hub repository and successfully tested by the product engineer (offline), an approval is emitted to proceed with CD steps. Starting from cluster infrastruture provision (IaC), followed by kubernetes deployments - first with `staging as green deployment`. When the deployed apps in `stagging envirornment` pass `smoke test` , then in `prodution blue` app is deployed (i.e. Promoted ). Also, with the app deployed in production environment (in blue) we perform `smoke tests`, then the staging app is deleted when the smoke tests succeed. Hence, we didn't implement the monitory step yet.
 
@@ -96,5 +101,6 @@ While the docker image is built and pushed to Docker hub repository and successf
     * `services.yml ` - Kubernetes template for app services creation
 
 ### Application Source Code
+----
 
 The application source code and test case files are found in the folder named, `./openhcs` . This application will be available shortly, running in the `PythonEveryWhere Platform.`
