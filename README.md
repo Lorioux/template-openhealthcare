@@ -16,7 +16,7 @@ The simplest microservices to be implemented through the API are categorized bas
 | Search medical knowledge     |                     |     *     |           *           |       |               |      |
 | Produce health report        |          *          |           |                       |       |               |      |
 | Send notifications           |          *          |           |                       |       |       *       |      |
-| Make donations               |                     |           |                       |   *   |               |      |
+| Donate                       |                     |           |                       |   *   |               |      |
 | Elaborate treatment plans    |          *          |           |                       |       |               |      |
 | etc.                         |                     |           |                       |       |               |      |
 
